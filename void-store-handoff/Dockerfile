@@ -27,7 +27,8 @@ COPY --from=api /app.jar ./app.jar
 ENV UPLOADS_DIR=/data/uploads \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseSerialGC" \
     TZ=Africa/Cairo
-VOLUME ["/data/uploads"]
+# No VOLUME instruction (Railway rejects it): mount persistent storage at /data/uploads from the
+# host instead — docker-compose.prod.yml does it, on Railway attach a Volume at that path.
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
   CMD wget -qO- http://localhost:8080/actuator/health || exit 1
