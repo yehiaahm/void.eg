@@ -1,0 +1,30 @@
+# Dev services: MySQL + Mailpit (catches outgoing email, UI on http://localhost:8025)
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: void-mysql
+    environment:
+      MYSQL_DATABASE: void_store
+      MYSQL_USER: void
+      MYSQL_PASSWORD: void_dev_password
+      MYSQL_ROOT_PASSWORD: void_dev_root
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci", "--default-time-zone=+00:00"]
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uvoid", "-pvoid_dev_password"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: void-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  mysql-data:

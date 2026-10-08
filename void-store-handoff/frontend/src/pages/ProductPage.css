@@ -1,0 +1,340 @@
+.s-pdpin {
+  padding: 48px var(--pad) 64px;
+}
+.s-lab.s-backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+[dir='rtl'] .s-backlink svg {
+  scale: -1 1;
+}
+.s-pgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+.s-gal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.s-gal figure {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--surface);
+}
+.s-gal svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64%;
+  translate: -50% -50%;
+}
+.s-gal img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.s-gal .s-ph {
+  font-size: 9px;
+}
+.s-dots {
+  display: none;
+}
+.s-info {
+  position: sticky;
+  top: calc(var(--head-h) + 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.s-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.s-stack > p {
+  margin: 0;
+}
+.s-row {
+  display: flex;
+  justify-content: space-between;
+}
+.s-center {
+  align-items: center;
+}
+.s-guide {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.s-namerow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.s-wish.s-wish-inline {
+  position: static;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  margin-top: -8px;
+  border: 1px solid var(--line-3);
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.s-pname {
+  margin: 0;
+  font: 600 24px/1.2 var(--f-sans);
+}
+.s-pprice {
+  display: flex;
+  gap: 10px;
+  font-size: 15px;
+}
+.s-was {
+  color: var(--faint);
+}
+.s-sizes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.s-size {
+  height: 46px;
+  border: 1px solid var(--line-3);
+  background: none;
+  cursor: pointer;
+  font: 500 13px/1 var(--f-mono);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+.s-size[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--ink);
+  border-color: var(--text);
+}
+.s-size:disabled {
+  cursor: default;
+  color: var(--faint);
+  border-color: var(--line);
+  text-decoration: line-through;
+}
+.s-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-3);
+}
+.s-qty button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.s-qty button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.s-qty output {
+  min-width: 30px;
+  text-align: center;
+  font: 500 14px/1 var(--f-mono);
+}
+.s-addwrap {
+  display: flex;
+  flex-direction: column;
+}
+.s-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--warn);
+}
+.s-desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.s-det {
+  border-top: 1px solid var(--line-2);
+}
+.s-det:last-of-type {
+  border-bottom: 1px solid var(--line-2);
+}
+.s-det summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 52px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 14px;
+}
+.s-det summary::-webkit-details-marker {
+  display: none;
+}
+.s-det summary::after {
+  content: '+';
+  font: 400 18px/1 var(--f-mono);
+  color: var(--muted);
+}
+.s-det[open] summary::after {
+  content: '−';
+}
+.s-det > div {
+  padding-bottom: 18px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.s-pre {
+  white-space: pre-line;
+}
+.s-specs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 22px;
+  margin: 0;
+}
+.s-specs dt {
+  color: var(--faint);
+}
+.s-specs dd {
+  margin: 0;
+  color: var(--text);
+}
+.s-more {
+  margin-top: 64px;
+}
+.s-more .s-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.s-bar {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .s-size:not(:disabled):hover {
+    border-color: var(--text);
+  }
+  .s-guide:hover {
+    color: var(--text);
+  }
+}
+
+@media (max-width: 900px) {
+  .s-pdpin {
+    padding: 40px 0 0;
+  }
+  .s-lab.s-backlink {
+    margin: 0 var(--pad);
+  }
+  .s-pgrid {
+    display: block;
+  }
+  .s-gal {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .s-gal::-webkit-scrollbar {
+    display: none;
+  }
+  .s-gal figure {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+  }
+  .s-dots {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin-top: 4px;
+  }
+  .s-dot {
+    width: 26px;
+    height: 36px;
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .s-dot span {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line-4);
+    transition:
+      width 0.3s,
+      background 0.3s;
+  }
+  .s-dot[aria-current='true'] span {
+    width: 16px;
+    background: var(--text);
+  }
+  .s-info {
+    position: static;
+    padding: 8px var(--pad) 0;
+  }
+  .s-addwrap {
+    display: none;
+  }
+  .s-more {
+    padding: 0 var(--pad);
+  }
+  .s-more .s-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .s-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 40px;
+    padding: 12px var(--pad) 14px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+    background: rgba(0, 0, 0, 0.96);
+    border-top: 1px solid var(--line-2);
+  }
+  .s-bar .s-add {
+    flex-shrink: 0;
+    height: 48px;
+  }
+  .s-barinfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .s-barname {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

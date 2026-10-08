@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: void-api
+  config:
+    import: optional:file:./local.properties
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3307/void_store?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC}
+    username: ${DB_USER:void}
+    password: ${DB_PASSWORD:void_dev_password}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+  jackson:
+    deserialization:
+      fail-on-null-for-primitives: false
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USER:}
+    password: ${MAIL_PASSWORD:}
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 30d
+          cache-public: true
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 40MB
+
+server:
+  port: ${PORT:8080}
+  compression:
+    enabled: true
+    min-response-size: 1KB
+    mime-types: text/html,text/css,application/javascript,text/javascript,application/json,image/svg+xml,application/xml,text/plain
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+void:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  uploads-dir: ${UPLOADS_DIR:uploads}
+  mail-from: ${MAIL_FROM:VOID <orders@void.local>}
+  jwt:
+    # Development secret only — production MUST set JWT_SECRET (32+ random bytes).
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef0123456789}
+    access-minutes: ${JWT_ACCESS_MINUTES:15}
+    refresh-days: ${JWT_REFRESH_DAYS:30}
+    secure-cookie: ${COOKIE_SECURE:false}
+  bootstrap:
+    owner-email: ${OWNER_EMAIL:}
+    owner-password: ${OWNER_PASSWORD:}
+    owner-name: ${OWNER_NAME:Owner}

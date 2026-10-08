@@ -1,0 +1,171 @@
+/* Small black hole stage (order confirmation, closed-store page). */
+.s-done-stage {
+  position: relative;
+  isolation: isolate;
+  /* flex, not grid: an oversized hole then overflows evenly on both sides in RTL too (like the hero) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(240px, 42svh, 380px);
+  overflow: hidden;
+  container-type: inline-size;
+}
+.s-done-cv {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.s-done-hole {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: min(110cqw, 680px);
+  aspect-ratio: 1480 / 560;
+  pointer-events: none;
+}
+.s-done-breathe {
+  position: absolute;
+  inset: 0;
+  animation: sDoneBreathe 10s ease-in-out 2.4s infinite;
+}
+.s-done-hole img {
+  position: absolute;
+  max-width: none;
+}
+.s-done-img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: sDoneHoleIn 1.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+.s-done-glow {
+  left: -8.11%;
+  top: -21.43%;
+  width: 116.22%;
+  height: 142.86%;
+}
+.s-done-glow-a {
+  animation:
+    sDoneFade 1.2s ease 0.6s both,
+    sDoneGlowA 8s ease-in-out 2s infinite;
+}
+.s-done-glow-b {
+  opacity: 0.12;
+  animation: sDoneGlowB 8s ease-in-out 2s infinite;
+}
+
+/* The event horizon — check mark drawn inside it. */
+.s-done-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: 27.52%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+}
+.s-done-check {
+  --d: var(--check-delay, 1.05s);
+  width: 46%;
+  height: auto;
+  overflow: visible;
+  fill: none;
+  stroke: var(--text);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.s-done-ring {
+  stroke-width: 1;
+  stroke-opacity: 0.35;
+  stroke-dasharray: 1;
+  animation: sDoneDraw 0.7s ease var(--d) both;
+}
+.s-done-tick {
+  stroke-width: 2.4;
+  stroke-dasharray: 1;
+  filter: drop-shadow(0 0 6px rgba(242, 240, 235, 0.55));
+  animation:
+    sDoneDraw 0.45s cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d) + 0.3s) both,
+    sDonePulse 2.8s ease-in-out calc(var(--d) + 1.15s) infinite;
+}
+
+@keyframes sDoneHoleIn {
+  0% {
+    transform: scale(0.5, 0.012);
+    filter: brightness(6) blur(8px);
+  }
+  30% {
+    transform: scale(0.86, 0.05);
+    filter: brightness(3) blur(4px);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes sDoneFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sDoneGlowA {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes sDoneGlowB {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+@keyframes sDoneBreathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025);
+  }
+}
+@keyframes sDoneDraw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes sDonePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 900px) {
+  .s-done-stage {
+    height: clamp(220px, 36svh, 320px);
+  }
+  .s-done-hole {
+    width: min(130cqw, 680px);
+  }
+}

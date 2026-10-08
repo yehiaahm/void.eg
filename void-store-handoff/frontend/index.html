@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <title>VOID — Shop</title>
+    <meta name="description" content="VOID — Egyptian streetwear in limited drops. Oversized tees & hoodies, technical jackets, unisex basics." />
+    <link rel="icon" href="/assets/void-logo-original.jpg" />
+    <link rel="apple-touch-icon" href="/assets/void-logo-original.jpg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="VOID" />
+    <meta property="og:title" content="VOID — Shop" />
+    <meta property="og:image" content="/assets/void-logo-original.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- fonts load without blocking the first paint (display=swap shows fallback text meanwhile) -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      />
+    </noscript>
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      href="/assets/void-hole.webp"
+      imagesrcset="/assets/void-hole-760.webp 760w, /assets/void-hole-1100.webp 1100w, /assets/void-hole.webp 1480w"
+      imagesizes="(max-width: 900px) 135vw, min(76vw, 920px)"
+      fetchpriority="high"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

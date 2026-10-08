@@ -1,0 +1,125 @@
+.s-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 40px 16px;
+}
+.s-card {
+  position: relative;
+  min-width: 0;
+  animation: sIn 0.7s ease both;
+}
+.s-cardlink,
+.s-card-ph {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.s-wish {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.s-wish[aria-pressed='true'] {
+  color: var(--text);
+}
+.s-heartpop {
+  animation: sHeartPop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes sHeartPop {
+  0% {
+    transform: scale(0.6);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: none;
+  }
+}
+.s-card-ph {
+  animation: none;
+}
+.s-img {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--surface);
+}
+.s-img svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 66%;
+  translate: -50% -50%;
+  transition: opacity 0.45s ease;
+}
+.s-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.45s ease;
+}
+.s-img .s-back {
+  opacity: 0;
+}
+.s-tag {
+  position: absolute;
+  inset-inline-start: 10px;
+  top: 10px;
+  padding: 5px 8px;
+  background: var(--text);
+  color: var(--ink);
+  font: 500 10px/1 var(--f-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[lang='ar'] .s-tag {
+  font: 500 12px/1 var(--f-ar);
+  letter-spacing: 0;
+}
+.s-cardtxt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.s-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .s-wish:hover {
+    background: rgba(0, 0, 0, 0.6);
+  }
+  .s-card:hover .s-front {
+    opacity: 0;
+  }
+  .s-card:hover .s-back {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .s-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 10px;
+  }
+}

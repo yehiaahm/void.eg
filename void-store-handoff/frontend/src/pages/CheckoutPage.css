@@ -1,0 +1,63 @@
+.s-co {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+.s-co-form {
+  gap: 32px;
+}
+.s-co-sum {
+  position: sticky;
+  top: calc(var(--head-h) + 24px);
+  padding: 20px;
+  border: 1px solid var(--line);
+}
+.s-co-details > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  cursor: default;
+  pointer-events: none;
+  padding-bottom: 6px;
+}
+.s-co-details > summary::-webkit-details-marker {
+  display: none;
+}
+.s-coupon {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+@media (max-width: 900px) {
+  .s-co {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .s-co-sum {
+    position: static;
+    order: -1;
+    padding: 0 0 4px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .s-co-details > summary {
+    min-height: 52px;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .s-co-details > summary::after {
+    content: '+';
+    margin-inline-start: 12px;
+    font: 400 18px/1 var(--f-mono);
+    color: var(--muted);
+  }
+  .s-co-details[open] > summary::after {
+    content: '−';
+  }
+  .s-co-details > summary .s-price {
+    margin-inline-start: auto;
+  }
+}

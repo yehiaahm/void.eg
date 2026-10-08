@@ -1,0 +1,23 @@
+# Node / Vite
+node_modules/
+dist/
+*.local
+
+# Java / Maven
+backend/target/
+backend/uploads/
+*.class
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+!.env.prod.example
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+backend/local.properties

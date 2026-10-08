@@ -1,0 +1,79 @@
+.s-foot {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px 28px;
+  padding: 28px var(--pad) 36px;
+  border-top: 1px solid var(--line);
+}
+.s-copy {
+  justify-self: center;
+}
+.s-flinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+}
+.s-flinks a {
+  font-size: 13px;
+  color: var(--muted);
+}
+.s-social {
+  display: flex;
+  justify-content: center;
+  justify-self: end;
+  gap: 14px;
+  margin: -8px;
+}
+.s-social a,
+.s-social-off {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--muted);
+  transition: color 0.25s;
+}
+.s-social svg {
+  width: 26px;
+  height: 26px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .s-flinks a:hover,
+  .s-social a:hover {
+    color: var(--text);
+  }
+  .s-social svg {
+    transition: transform 0.25s;
+  }
+  .s-social a:hover svg {
+    transform: scale(1.08);
+  }
+}
+
+@media (max-width: 900px) {
+  .s-foot {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 22px;
+    padding-top: 36px;
+  }
+  .s-copy {
+    order: -1;
+  }
+  .s-flinks {
+    justify-content: center;
+  }
+  .s-social {
+    justify-self: center;
+    margin: -8px 0;
+    gap: 20px;
+  }
+  .s-social svg {
+    width: 28px;
+    height: 28px;
+  }
+}

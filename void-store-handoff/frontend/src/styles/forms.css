@@ -1,0 +1,468 @@
+/* Forms & page layout for the pages added beyond the approved design (bag, checkout, account, tracking).
+   Same tokens, hairlines and type as the design. */
+
+.s-page {
+  padding: 48px var(--pad) 80px;
+}
+.s-narrow {
+  max-width: 460px;
+  margin: 0 auto;
+}
+.s-wide {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.s-title {
+  margin: 0 0 8px;
+  font: 600 24px/1.2 var(--f-body);
+}
+.s-sub {
+  margin: 0 0 28px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Policy pages (InfoPage) */
+.s-prose {
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.8;
+}
+.s-prose .s-title {
+  margin-bottom: 28px;
+  color: var(--text);
+}
+.s-prose h2 {
+  margin: 32px 0 10px;
+  color: var(--text);
+  font: 600 16px/1.4 var(--f-body);
+}
+.s-prose p {
+  margin: 0 0 18px;
+  white-space: pre-line;
+}
+.s-prose ul {
+  margin: 0 0 18px;
+  padding-inline-start: 20px;
+}
+.s-prose li {
+  margin-bottom: 10px;
+}
+.s-prose li::marker {
+  color: var(--faint);
+}
+
+.s-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.s-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.s-fieldset > legend {
+  padding: 0;
+  margin-bottom: 14px;
+}
+.s-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.s-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.s-field > label,
+.s-field > .s-flabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.s-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-3);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px; /* 16px stops iOS zooming on focus */
+  outline: none;
+  transition: border-color 0.2s;
+}
+textarea.s-input {
+  min-height: 88px;
+  resize: vertical;
+  line-height: 1.5;
+}
+select.s-input {
+  appearance: none;
+  padding-inline-end: 40px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) 50%,
+    calc(100% - 15px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+[dir='rtl'] select.s-input {
+  background-position:
+    20px 50%,
+    15px 50%;
+}
+.s-input:focus {
+  border-color: var(--text);
+}
+.s-input[aria-invalid='true'] {
+  border-color: var(--warn);
+}
+.s-input::placeholder {
+  color: var(--faint);
+}
+.s-ferr {
+  margin: 0;
+  font-size: 12px;
+  color: var(--warn);
+}
+.s-fhint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--faint);
+}
+.s-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.s-check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--text);
+}
+.s-alert {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 155, 106, 0.4);
+  color: var(--warn);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.s-note {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line-3);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.s-linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-4);
+}
+.s-full {
+  width: 100%;
+}
+.s-hr {
+  height: 1px;
+  margin: 8px 0;
+  border: 0;
+  background: var(--line);
+}
+
+/* Radio card (payment method / saved address) */
+.s-radio {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid var(--line-3);
+  cursor: pointer;
+}
+.s-radio:has(input:checked) {
+  border-color: var(--text);
+}
+.s-radio input {
+  margin: 3px 0 0;
+  accent-color: var(--text);
+}
+.s-radio b {
+  display: block;
+  font-weight: 500;
+  font-size: 14px;
+}
+.s-radio span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Totals table (bag + checkout + order pages) */
+.s-totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+.s-totals dt {
+  color: var(--muted);
+}
+.s-totals dd {
+  margin: 0;
+  text-align: end;
+  font-family: var(--f-mono);
+  font-size: 13px;
+}
+:root[lang='ar'] .s-totals dd {
+  font-family: var(--f-ar);
+  font-size: 14px;
+}
+.s-totals .s-grand {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Line item */
+.s-line {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.s-line > a {
+  display: block;
+}
+.s-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--surface);
+}
+.s-thumb img,
+.s-thumb svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.s-thumb svg {
+  inset: 10%;
+  width: 80%;
+  height: 80%;
+}
+.s-linemeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 14px;
+}
+.s-linemeta .s-lab {
+  font-size: 10px;
+}
+:root[lang='ar'] .s-linemeta .s-lab {
+  font-size: 12px;
+}
+.s-lineend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.s-mini-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-3);
+  margin-top: 4px;
+  width: max-content;
+}
+.s-mini-qty button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.s-mini-qty button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.s-mini-qty output {
+  min-width: 22px;
+  text-align: center;
+  font: 500 13px/1 var(--f-mono);
+}
+
+/* Tabs */
+.s-tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.s-tabs a,
+.s-tabs button {
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.s-tabs [aria-current='page'],
+.s-tabs [aria-selected='true'] {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* Status pill */
+.s-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--line-3);
+  font: 500 10px/1 var(--f-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+:root[lang='ar'] .s-pill {
+  font: 500 12px/1 var(--f-ar);
+  letter-spacing: 0;
+}
+.s-pill[data-s='DELIVERED'] {
+  border-color: rgba(143, 209, 158, 0.5);
+  color: var(--ok);
+}
+.s-pill[data-s='CANCELLED'],
+.s-pill[data-s='RETURNED'] {
+  border-color: rgba(255, 155, 106, 0.4);
+  color: var(--warn);
+}
+
+/* Timeline */
+.s-timeline {
+  display: flex;
+  gap: 0;
+  margin: 8px 0 28px;
+  padding: 0;
+  list-style: none;
+}
+.s-timeline li {
+  position: relative;
+  flex: 1;
+  padding-top: 18px;
+  color: var(--faint);
+  font-size: 12px;
+  text-align: center;
+}
+.s-timeline li::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--line-3);
+}
+.s-timeline li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--line-4);
+}
+.s-timeline li[data-done='true'] {
+  color: var(--text);
+}
+.s-timeline li[data-done='true']::after {
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.s-card-box {
+  padding: 20px;
+  border: 1px solid var(--line);
+}
+.s-kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 20px;
+  margin: 0;
+  font-size: 14px;
+}
+.s-kv dt {
+  color: var(--faint);
+}
+.s-kv dd {
+  margin: 0;
+}
+
+.s-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: sSpin 0.7s linear infinite;
+  vertical-align: -2px;
+}
+@keyframes sSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .s-page {
+    padding-top: 32px;
+  }
+}
+@media (max-width: 520px) {
+  .s-grid2 {
+    grid-template-columns: 1fr;
+  }
+}
