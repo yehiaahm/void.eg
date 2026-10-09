@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
-/** Policy / info page (shipping, returns, privacy, contact), edited in the admin. */
+/** Policy / info page (shipping, returns, privacy, contact, about), edited in the admin. */
 @Entity
 @Table(name = "pages")
 public class Page {

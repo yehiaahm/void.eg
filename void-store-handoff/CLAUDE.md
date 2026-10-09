@@ -44,7 +44,7 @@ When the reference HTML and the screenshots disagree, the screenshots win.
 5. **Footer** (hairline top) —
    - Desktop: three columns — left: text links (Shipping, Returns & refunds, Privacy policy, Contact); **centre: "© 2026 VOID"**; **right: Instagram + TikTok icons** (26px, 48px tap target, muted → white on hover).
    - Phone: everything centred and stacked — "© 2026 VOID", then links, then the icons (28px).
-   - There is **no About section and no email/notify form**.
+   - There is **no email/notify form**. (The design had no About section either — see the deviation below.)
 
 ### Product page (`/:lang/product/:slug`)
 - "Back" link to the shop (restore scroll position).
@@ -75,6 +75,7 @@ The owner extended the scope to a full store: cart, checkout (cash on delivery, 
 ### Intentional deviations from the screenshots
 - Header (owner request, 2026-10-02): desktop left nav = Shop · Track order; right = language · wishlist heart (count) · account · bag. On phones the heart moves into the menu.
 - Product cards show the name only — no price (owner request, 2026-10-02). The price appears on the product page, the phone sticky bar, the bag and checkout. Same for the phone-menu search results.
+- About section (owner request, 2026-10-08): between the shop grid and the footer, `components/About.tsx` — hairline top, centred brand story from the `about` page (V9, Admin → Content; blank line = new paragraph) plus the fixed sign-off "VOID — Nothing is truly empty.". The Arabic is the owner's copy; the English is a translation for the owner to review.
 - The announcement bar is hidden until Drop 02 has a `startsAt` date (no fake countdown in production).
 - `sHoleIn` starts at opacity 1 (the squashed flash line is visible from frame one) so the hero image counts for LCP; the `[PRODUCT PHOTO]` label uses `--faint` instead of `#6F6C66` for WCAG contrast.
 - Pages beyond the design (bag drawer, checkout, account, tracking, policy pages, admin) reuse the same tokens and type.

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useProducts } from '../api'
+import { About } from '../components/About'
 import { Hero } from '../components/hero/Hero'
 import { ProductCard } from '../components/ProductCard'
 import { scrollToShop } from '../hooks/useGoShop'
@@ -43,6 +44,7 @@ export function HomePage() {
               ))}
         </div>
       </section>
+      <About />
     </main>
   )
 }

@@ -1,0 +1,32 @@
+/* Brand story under the shop grid (owner request, 2026-10-08) — same tokens and type as the design. */
+.s-about {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: clamp(72px, 10vw, 128px);
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.s-about h2 {
+  margin: 0 0 32px;
+}
+.s-about p {
+  max-width: 40em;
+  margin: 0 0 1.5em;
+  color: var(--muted);
+  font: 400 clamp(15px, 1.2vw, 17px) / 1.9 var(--f-body);
+  white-space: pre-line;
+  text-wrap: balance;
+}
+.s-about p:first-of-type {
+  color: var(--text);
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.7;
+}
+.s-about .s-about-sign {
+  margin: 16px 0 0;
+  color: var(--text);
+  font: 500 12px/1.4 var(--f-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}

@@ -70,5 +70,5 @@ The tests cover checkout totals, stock locking under concurrent orders (no overs
 | Products | Prices, photos (front / back / detail / on body), real stock, SKUs, fabric, weight, colour, care, size chart |
 | Drops | Drop 02 launch date (drives the countdown — the announcement bar stays hidden until it's set) |
 | Shipping | Fee + delivery time for each governorate you deliver to, then enable it |
-| Content | Return / exchange window (7 days, from `V7` with the Returns & refunds page text — keep the two in sync if you change it), store email (gets new-order alerts) & phone, shipping-and-returns text, the policy pages (Privacy has a default from `V8` describing what the site collects today — review it, and update it if you add online payment, analytics or a newsletter) |
+| Content | Return / exchange window (7 days, from `V7` with the Returns & refunds page text — keep the two in sync if you change it), store email (gets new-order alerts) & phone, the About text on the home page (Arabic is yours from `V9`; review the English translation), shipping-and-returns text, the policy pages (Privacy has a default from `V8` describing what the site collects today — review it, and update it if you add online payment, analytics or a newsletter) |
 | Staff | Team members and their roles |
