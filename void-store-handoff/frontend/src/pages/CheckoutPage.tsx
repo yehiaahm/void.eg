@@ -145,7 +145,7 @@ export function CheckoutPage() {
               <Field label={t.email} name="email" type="email" autoComplete="email" inputMode="email" value={f.email} onChange={set('email')} error={errors.email} dir="ltr" />
               <div className="s-grid2">
                 <Field label={t.fullName} name="name" autoComplete="name" value={f.name} onChange={set('name')} error={errors.name} />
-                <Field label={t.phone} name="phone" type="tel" autoComplete="tel" inputMode="tel" value={f.phone} onChange={set('phone')} error={errors.phone} hint={t.phoneHint} dir="ltr" />
+                <Field label={t.phone} name="phone" type="tel" autoComplete="tel" inputMode="tel" value={f.phone} onChange={set('phone')} error={errors.phone} dir="ltr" />
               </div>
             </fieldset>
 

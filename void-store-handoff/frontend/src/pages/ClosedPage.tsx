@@ -200,7 +200,6 @@ export function ClosedPage() {
                     value={f.phone}
                     onChange={set('phone')}
                     error={errors.phone}
-                    hint={t.phoneHint}
                     dir="ltr"
                   />
                 </div>
@@ -222,7 +221,6 @@ export function ClosedPage() {
                   name="notes"
                   value={f.notes}
                   onChange={set('notes')}
-                  placeholder={t.notesPlaceholder}
                   aside={<span className="s-fhint">{t.optional}</span>}
                   rows={3}
                   maxLength={1000}
