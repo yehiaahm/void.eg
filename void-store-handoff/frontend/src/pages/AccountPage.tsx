@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, useZones, type Address, type AddressInput } from '../api'
-import { http } from '../api/http'
+import { http, type SessionUser } from '../api/http'
 import { Field, Select } from '../components/Field'
 import { OrderView, StatusPill, formatDate } from '../components/OrderView'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -27,7 +27,13 @@ function AuthForms() {
   const [busy, setBusy] = useState(false)
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }))
 
-  const after = () => navigate(params.get('next') === 'checkout' ? `/${lang}/checkout` : `/${lang}/account`, { replace: true })
+  // Staff (owner / admin / staff) use this same sign-in and land in the admin panel.
+  const after = (u: SessionUser) => {
+    const next = params.get('next')
+    if (next === 'checkout') return navigate(`/${lang}/checkout`, { replace: true })
+    if (isStaff(u)) return navigate('/admin', { replace: true })
+    navigate(`/${lang}/account`, { replace: true })
+  }
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -40,11 +46,9 @@ function AuthForms() {
     setBusy(true)
     try {
       if (mode === 'in') {
-        await login(f.email.trim(), f.password)
-        after()
+        after(await login(f.email.trim(), f.password))
       } else if (mode === 'up') {
-        await register(f.name.trim(), f.email.trim(), f.password, f.phone || undefined)
-        after()
+        after(await register(f.name.trim(), f.email.trim(), f.password, f.phone || undefined))
       } else {
         await http.post('/auth/forgot', { email: f.email.trim(), lang })
         setInfo(t.resetSent)

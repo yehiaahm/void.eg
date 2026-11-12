@@ -4,9 +4,11 @@ spring:
   config:
     import: optional:file:./local.properties
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3307/void_store?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC}
-    username: ${DB_USER:void}
-    password: ${DB_PASSWORD:void_dev_password}
+    # DB_URL / DB_USER / DB_PASSWORD win when set (docker-compose.prod.yml). Otherwise Railway's
+    # MySQL variables (MYSQLHOST, MYSQLPORT, ...) are used, and finally the local dev defaults.
+    url: ${DB_URL:jdbc:mysql://${MYSQLHOST:localhost}:${MYSQLPORT:3307}/${MYSQLDATABASE:void_store}?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC&allowPublicKeyRetrieval=true}
+    username: ${DB_USER:${MYSQLUSER:void}}
+    password: ${DB_PASSWORD:${MYSQLPASSWORD:void_dev_password}}
   jpa:
     open-in-view: false
     hibernate:
@@ -59,6 +61,7 @@ void:
     refresh-days: ${JWT_REFRESH_DAYS:30}
     secure-cookie: ${COOKIE_SECURE:false}
   bootstrap:
-    owner-email: ${OWNER_EMAIL:}
-    owner-password: ${OWNER_PASSWORD:}
+    # ADMIN_USERNAME / ADMIN_PASSWORD are accepted as aliases (the username must be an email).
+    owner-email: ${OWNER_EMAIL:${ADMIN_USERNAME:}}
+    owner-password: ${OWNER_PASSWORD:${ADMIN_PASSWORD:}}
     owner-name: ${OWNER_NAME:Owner}

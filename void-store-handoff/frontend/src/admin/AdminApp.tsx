@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { Suspense, lazy, useEffect, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { ApiError } from '../api/http'
 import { isStaff, useAuth } from '../store/auth'
 import './admin.css'
 import { adminApi } from './api'
 import { AdminI18n, useT } from './i18n'
 import { useStoreStatus } from './StoreSwitch'
-import { Field, Icons } from './ui'
+import { Icons } from './ui'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Orders = lazy(() => import('./pages/Orders'))
@@ -24,44 +23,25 @@ const Staff = lazy(() => import('./pages/Staff'))
 const Waitlist = lazy(() => import('./pages/Waitlist'))
 const Messages = lazy(() => import('./pages/Messages'))
 
-function Login() {
-  const { t } = useT()
-  const { login, logout, user } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(user && !isStaff(user) ? t.notStaff : null)
-  const [busy, setBusy] = useState(false)
-
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setBusy(true)
-    try {
-      const u = await login(email.trim(), password)
-      if (!isStaff(u)) {
-        await logout()
-        setError(t.notStaff)
-      }
-    } catch (err) {
-      setError(err instanceof ApiError && err.code === 'bad_credentials' ? t.badCredentials : err instanceof ApiError && err.code === 'rate_limited' ? err.message : t.genericError)
-    } finally {
-      setBusy(false)
-    }
-  }
+/** Signed in, but as a customer: no admin access. Sign-in itself happens on the store's account page. */
+function NotStaff() {
+  const { t, lang } = useT()
+  const { logout } = useAuth()
   return (
     <div className="a-login">
-      <form className="a-card a-form" onSubmit={submit}>
+      <div className="a-card a-form">
         <div className="a-brand" style={{ padding: '0 0 8px' }}>
           <b dir="ltr">VOID</b>
           <span className="a-faint">{t.admin}</span>
         </div>
-        <Field label={t.email} type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" required />
-        <Field label={t.password} type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        {error && <p className="a-error">{error}</p>}
-        <button type="submit" className="a-btn a-btn-primary" disabled={busy} style={{ height: 40 }}>
-          {t.signIn}
+        <p className="a-error">{t.notStaff}</p>
+        <a className="a-btn" href={`/${lang}`} style={{ height: 40 }}>
+          {t.viewStore}
+        </a>
+        <button type="button" className="a-btn a-btn-primary" style={{ height: 40 }} onClick={() => logout()}>
+          {t.signOut}
         </button>
-      </form>
+      </div>
     </div>
   )
 }
@@ -194,9 +174,12 @@ function Shell() {
 }
 
 function Gate() {
+  const { lang } = useT()
   const { user, ready } = useAuth()
   if (!ready) return null
-  return user && isStaff(user) ? <Shell /> : <Login />
+  // Staff sign in on the same page as customers; it sends them back here afterwards.
+  if (!user) return <Navigate to={`/${lang}/account?next=admin`} replace />
+  return isStaff(user) ? <Shell /> : <NotStaff />
 }
 
 export default function AdminApp() {
