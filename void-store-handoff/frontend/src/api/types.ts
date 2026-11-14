@@ -31,9 +31,8 @@ export interface ProductDetails {
   care: Localized
 }
 
-/** A model who wears the piece in the photos: first name, height in cm, size worn. */
+/** A model who wears the piece in the photos: height in cm and size worn (anonymous). */
 export interface FitModel {
-  name: Localized
   heightCm: number
   size: Size
 }

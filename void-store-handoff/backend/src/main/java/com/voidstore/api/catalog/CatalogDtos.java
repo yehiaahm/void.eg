@@ -18,8 +18,8 @@ public final class CatalogDtos {
 
 	public record DetailsDto(Localized fit, Localized fabric, Localized weight, Localized colour, Localized care) {}
 
-	/** A model wearing the piece in the photos: name, height in cm, size worn. */
-	public record FitModelDto(Localized name, int heightCm, String size) {}
+	/** A model wearing the piece in the photos: height in cm and size worn (no name is ever exposed). */
+	public record FitModelDto(int heightCm, String size) {}
 
 	public record ProductDto(
 			long id, String slug, Long dropId, Localized category, Localized name, Localized description,
@@ -55,7 +55,7 @@ public final class CatalogDtos {
 						Localized.of(p.getCareEn(), p.getCareAr())),
 				Localized.of(p.getSizeFitEn(), p.getSizeFitAr()),
 				p.getFitModels().stream()
-						.map(m -> new FitModelDto(Localized.of(m.getNameEn(), m.getNameAr()), m.getHeightCm(), m.getSize()))
+						.map(m -> new FitModelDto(m.getHeightCm(), m.getSize()))
 						.toList());
 	}
 }

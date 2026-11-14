@@ -81,7 +81,8 @@ function ProductView({ product }: { product: Product }) {
   const soldOut = product.variants.every((v) => v.stock <= 0)
   const maxQty = Math.max(1, Math.min(MAX_QTY, variant?.stock ?? MAX_QTY))
   // Models wearing the size the shopper picked (shown under the size buttons).
-  const fitModels = product.fitModels ?? []
+  // Models are anonymous: "Model 1 / 2 / 3" in the order they are stored.
+  const fitModels = (product.fitModels ?? []).map((m, i) => ({ ...m, n: i + 1 }))
   const wornBy = size ? fitModels.filter((m) => m.size === size) : []
   const price = formatPrice(product.price, lang)
   const more = all.filter((p) => p.slug !== product.slug && p.dropId === product.dropId)
@@ -233,8 +234,8 @@ function ProductView({ product }: { product: Product }) {
                 <span className="s-lab">{t.wornInSize(size as Size)}</span>
                 <span className="s-wornlist">
                   {wornBy.map((m) => (
-                    <span key={l(m.name)} className="s-wornitem">
-                      <bdi>{l(m.name)}</bdi>
+                    <span key={m.n} className="s-wornitem">
+                      <bdi>{t.modelN(m.n)}</bdi>
                       <span className="s-wornsep" aria-hidden="true">
                         ·
                       </span>
@@ -294,9 +295,9 @@ function ProductView({ product }: { product: Product }) {
                     </thead>
                     <tbody>
                       {fitModels.map((m) => (
-                        <tr key={l(m.name)} data-active={size === m.size || undefined}>
+                        <tr key={m.n} data-active={size === m.size || undefined}>
                           <th scope="row">
-                            <bdi>{l(m.name)}</bdi>
+                            <bdi>{t.modelN(m.n)}</bdi>
                           </th>
                           <td>
                             <bdi>
