@@ -14,17 +14,14 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
   const photo = cut || hasPhoto(product, 'front')
   return (
     <div className="s-card" style={{ animationDelay: `${index * 0.05}s` }}>
-      <Link className="s-cardlink" to={`/${lang}/product/${product.slug}`} state={{ fromShop: true }}>
+      {/* The name is not shown on the card (owner request, 2026-11-14) — only on the product page. It stays
+          in aria-label so the link still has an accessible name. */}
+      <Link className="s-cardlink" to={`/${lang}/product/${product.slug}`} state={{ fromShop: true }} aria-label={l(product.name)}>
         <span className={`s-img${photo ? ' s-img-photo' : ''}${cut ? ' s-img-cut' : ''}`}>
           <ProductMedia product={product} kind={cut ? 'cutout' : 'front'} className="s-front" sizes="(max-width: 900px) 50vw, 25vw" />
           <ProductMedia product={product} kind={cut ? 'front' : 'back'} className="s-back" sizes="(max-width: 900px) 50vw, 25vw" />
           {!photo && <span className="s-ph">{t.productPhoto}</span>}
           {soldOut && <span className="s-tag">{t.soldOut}</span>}
-        </span>
-        <span className="s-cardtxt">
-          <span className="s-name">
-            <bdi>{l(product.name)}</bdi>
-          </span>
         </span>
       </Link>
       <WishButton slug={product.slug} name={l(product.name)} />

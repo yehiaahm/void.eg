@@ -17,7 +17,6 @@ export function WishButton({ slug, name, className = 's-wish', size = 18 }: { sl
       className={className}
       aria-pressed={saved}
       aria-label={saved ? t.unsaveItem(name) : t.saveItem(name)}
-      title={saved ? t.unsaveItem(name) : t.saveItem(name)}
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()
