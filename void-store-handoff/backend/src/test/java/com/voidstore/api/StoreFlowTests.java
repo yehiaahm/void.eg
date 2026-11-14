@@ -119,10 +119,10 @@ class StoreFlowTests {
 		var r = call("GET", "/products", null, null, null);
 		assertThat(r.status()).isEqualTo(200);
 		assertThat(r.body().size()).isEqualTo(5); // 3 real pieces (longsleeve, white hoodie, navy hoodie) + the 2 test fixtures; the V2 demos are gone (V14, V18, V19)
-		assertThat(findSlug(r.body(), "longsleeve-black").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V15)
-		assertThat(findSlug(r.body(), "void-trace-hoodie-white").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V16)
+		assertThat(findSlug(r.body(), "longsleeve-black").get("images").size()).isEqualTo(4); // 4 gallery photos (V20 removed the cutout)
+		assertThat(findSlug(r.body(), "void-trace-hoodie-white").get("images").size()).isEqualTo(4); // 4 gallery photos (V20 removed the cutout)
 		assertThat(r.body().toString()).doesNotContain("event-horizon-hoodie");
-		assertThat(findSlug(r.body(), "void-trace-hoodie-navy").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V18)
+		assertThat(findSlug(r.body(), "void-trace-hoodie-navy").get("images").size()).isEqualTo(4); // 4 gallery photos (V20 removed the cutout)
 		assertThat(r.body().toString()).doesNotContain("accretion-shell-jacket");
 		var tee = findSlug(r.body(), "singularity-tee");
 		assertThat(tee.get("price").asInt()).isEqualTo(100000);
