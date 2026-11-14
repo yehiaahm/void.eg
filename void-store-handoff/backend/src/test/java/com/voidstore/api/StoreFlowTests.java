@@ -104,8 +104,8 @@ class StoreFlowTests {
 		var r = call("GET", "/products", null, null, null);
 		assertThat(r.status()).isEqualTo(200);
 		assertThat(r.body().size()).isEqualTo(5); // V2 seed (4) + LONGSLEEVE_BLACK (V11) + HOODIE_WHITE (V14) - demo hoodie (V14)
-		assertThat(findSlug(r.body(), "longsleeve-black").get("images").size()).isEqualTo(4);
-		assertThat(findSlug(r.body(), "hoodie-white").get("images").size()).isEqualTo(4);
+		assertThat(findSlug(r.body(), "longsleeve-black").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V15)
+		assertThat(findSlug(r.body(), "hoodie-white").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V16)
 		assertThat(r.body().toString()).doesNotContain("event-horizon-hoodie");
 		var tee = findSlug(r.body(), "singularity-tee");
 		assertThat(tee.get("price").asInt()).isEqualTo(100000);

@@ -78,6 +78,17 @@
 .s-img .s-back {
   opacity: 0;
 }
+.s-img-cut {
+  background: #000;
+}
+/* Cut-out piece: contained with room around it so the glow is not clipped. */
+.s-img-cut .s-front {
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 3px rgba(242, 240, 235, 0.55)) drop-shadow(0 0 18px rgba(242, 240, 235, 0.3));
+}
 .s-tag {
   position: absolute;
   inset-inline-start: 10px;

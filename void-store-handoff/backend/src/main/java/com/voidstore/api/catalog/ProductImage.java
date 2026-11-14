@@ -14,8 +14,8 @@ import jakarta.persistence.Table;
 @Table(name = "product_images")
 public class ProductImage {
 
-	/** front / back / detail / body — matches the gallery slots in the design. */
-	public static final java.util.Set<String> KINDS = java.util.Set.of("front", "back", "detail", "body");
+	/** front / back / detail / body — the gallery slots in the design; cutout — transparent PNG/WebP of the piece alone, used only on the shop-grid card (black tile + white glow). */
+	public static final java.util.Set<String> KINDS = java.util.Set.of("front", "back", "detail", "body", "cutout");
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -10,7 +10,7 @@ import { useT } from '../i18n'
 import { Badge, Field, Icons, PageHead, Pair, Pick, errText } from '../ui'
 
 const L = (en = '', ar = ''): Localized => ({ en, ar })
-const KINDS = ['front', 'back', 'detail', 'body']
+const KINDS = ['front', 'back', 'detail', 'body', 'cutout']
 
 interface FormState extends Omit<ProductInput, 'price' | 'compareAtPrice'> {
   price: string

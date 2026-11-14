@@ -8,7 +8,7 @@ export interface Localized {
   ar: string
 }
 
-export type ImageKind = 'front' | 'back' | 'detail' | 'body'
+export type ImageKind = 'front' | 'back' | 'detail' | 'body' | 'cutout'
 
 export interface ProductImage {
   url: string
