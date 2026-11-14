@@ -50,7 +50,7 @@ When the reference HTML and the screenshots disagree, the screenshots win.
 - "Back" link to the shop (restore scroll position).
 - Gallery of 4 images (front, back, detail, on body): desktop 2×2 grid; phone full-width swipe with scroll-snap + dots.
 - Sticky info column (desktop): name, price (EGP), limited-run note, size selector S M L XL, quantity stepper (1–10), "Add to bag" (shows a warning line + toast if no size is selected), description.
-- Accordions: Details (fit, fabric, weight, colour, care, SKU), Size & fit, Shipping & returns.
+- Accordion: Shipping & returns only (Details and Size & fit were removed, see the deviations below).
 - "More from Drop 01" — the other three products (3 columns desktop / 2 phone).
 - Phone: sticky bottom bar with name, price and "Add to bag"; the in-column button is hidden.
 
@@ -77,6 +77,8 @@ The owner extended the scope to a full store: cart, checkout (cash on delivery, 
 - Shop-card cut-outs (optional; owner request 2026-11-14, then switched back to model photos by V20 the same day — the cards currently show each product's `front` photo and `back` on hover): a product image of kind `cutout` (admin slot "Shop card") is a transparent WebP of the piece alone. `ProductCard` shows it on a black tile with a white glow (`.s-img-cut` in `ProductCard.css`, `drop-shadow`), and the model photo (`front`) fades in on hover. Products without a cut-out keep the old card. The product-page gallery still uses the four photo slots only. Cut-outs are made from the flat-lay photo (black garments: luminance threshold; white garments: rembg + GrabCut edge clean-up), saved at 1000px wide.
 - Product cards show no text at all (owner request, 2026-11-14: name and price appear only on the product page); the name stays in the card link's `aria-label`. Earlier (2026-10-02) they showed the name only. The price appears on the product page, the phone sticky bar, the bag and checkout. Same for the phone-menu search results.
 - About section (owner request, 2026-10-08): between the shop grid and the footer, `components/About.tsx` — hairline top, centred brand story from the `about` page (V9, Admin → Content; blank line = new paragraph) plus the fixed sign-off "VOID — Nothing is truly empty.". The Arabic is the owner's copy; the English is a translation for the owner to review.
+- Model fit (owner request, 2026-11-14, V22/V23): table `product_fit_models` (height cm, size worn; anonymous, names removed by V23) -> `fitModels` on the product API. The product page shows it only as a line under the size buttons: after a size is picked, "Size L worn by Model 1 · 178 cm, Model 3 · 193 cm". Rows are added by Flyway migrations (no admin editor yet). Chest/length/sleeve measurements in cm are still not provided, so none are shown.
+- Product page accordions (owner request, 2026-11-14): the Details and Size & fit accordions and the Size guide link were removed; only Shipping & returns remains. The API still returns `details` and `sizeFit` (admin still edits them) but the storefront does not show them.
 - The announcement bar is hidden until Drop 02 has a `startsAt` date (no fake countdown in production).
 - `sHoleIn` starts at opacity 1 (the squashed flash line is visible from frame one) so the hero image counts for LCP; the `[PRODUCT PHOTO]` label uses `--faint` instead of `#6F6C66` for WCAG contrast.
 - Pages beyond the design (bag drawer, checkout, account, tracking, policy pages, admin) reuse the same tokens and type.

@@ -72,12 +72,6 @@
 .s-center {
   align-items: center;
 }
-.s-guide {
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
 .s-namerow {
   display: flex;
   justify-content: space-between;
@@ -207,18 +201,27 @@
 .s-pre {
   white-space: pre-line;
 }
-.s-specs {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 22px;
+.s-wornby {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
   margin: 0;
+  font-size: 13px;
+  color: var(--muted);
 }
-.s-specs dt {
-  color: var(--faint);
+.s-wornlist {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
 }
-.s-specs dd {
-  margin: 0;
+.s-wornitem {
+  display: inline-flex;
+  gap: 6px;
   color: var(--text);
+}
+.s-wornsep {
+  color: var(--faint);
 }
 .s-more {
   margin-top: 64px;
@@ -233,9 +236,6 @@
 @media (hover: hover) and (pointer: fine) {
   .s-size:not(:disabled):hover {
     border-color: var(--text);
-  }
-  .s-guide:hover {
-    color: var(--text);
   }
 }
 
