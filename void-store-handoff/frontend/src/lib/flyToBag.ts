@@ -1,12 +1,15 @@
-// "Add to bag" animation: a copy of the product picture flies in an arc into the bag icon,
-// then the icon pops. Skipped (pop only) for prefers-reduced-motion.
+// "Add to bag" animation: a copy of the product picture flies in an arc into the bag, then the bag
+// pops. It lands in the floating bag at the bottom of the screen (BagDock, `data-dock-target`) and
+// falls back to the header's bag icon (`data-bag-target`). Skipped (pop only) for prefers-reduced-motion.
 
 export const BAG_BUMP = 'void:bag-bump'
 
 const bump = () => window.dispatchEvent(new Event(BAG_BUMP))
 
 export function flyToBag(source: Element | null) {
-  const target = document.querySelector<HTMLElement>('[data-bag-target]')
+  const visible = (el: HTMLElement | null) => (el && el.getBoundingClientRect().width > 0 ? el : null)
+  const target =
+    visible(document.querySelector<HTMLElement>('[data-dock-target]')) ?? visible(document.querySelector<HTMLElement>('[data-bag-target]'))
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   if (!source || !target || reduce || typeof document.body.animate !== 'function') {
     bump()

@@ -3,6 +3,7 @@ import { Suspense, lazy, useEffect } from 'react'
 import { Link, Navigate, Outlet, RouterProvider, ScrollRestoration, createBrowserRouter, useLocation, useParams } from 'react-router-dom'
 import { useSettings } from './api'
 import { AnnouncementBar } from './components/AnnouncementBar'
+import { BagDock } from './components/BagDock'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { I18nProvider, isLang, preferredLang, useI18n } from './i18n'
@@ -109,6 +110,7 @@ function StoreLayout() {
         <Outlet />
       </Suspense>
       <Footer />
+      <BagDock />
       <LazyBag />
       <ScrollRestoration getKey={(loc) => loc.pathname.replace(/^\/(en|ar)/, '')} />
     </I18nProvider>

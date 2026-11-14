@@ -50,6 +50,7 @@ const en = {
 
   // bag
   bag: 'Bag',
+  viewBag: 'View bag',
   closeBag: 'Close bag',
   bagEmpty: 'Your bag is empty.',
   continueShopping: 'Continue shopping',
@@ -318,6 +319,7 @@ const ar: Dict = {
   backHome: 'العودة للمتجر',
 
   bag: 'الحقيبة',
+  viewBag: 'عرض الحقيبة',
   closeBag: 'إغلاق الحقيبة',
   bagEmpty: 'حقيبتك فاضية.',
   continueShopping: 'كمّل تسوّق',
