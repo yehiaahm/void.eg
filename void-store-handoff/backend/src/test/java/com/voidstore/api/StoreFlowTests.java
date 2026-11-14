@@ -103,10 +103,12 @@ class StoreFlowTests {
 		db.update("update product_variants v join products p on p.id = v.product_id set v.stock = 250 where p.slug = 'singularity-tee' and v.size = 'S'");
 		var r = call("GET", "/products", null, null, null);
 		assertThat(r.status()).isEqualTo(200);
-		assertThat(r.body().size()).isEqualTo(5); // V2 seed (4) + LONGSLEEVE_BLACK (V11) + HOODIE_WHITE (V14) - demo hoodie (V14)
+		assertThat(r.body().size()).isEqualTo(5); // V2 seed (4) + LONGSLEEVE_BLACK (V11) + white hoodie (V14) + navy hoodie (V18) - demo hoodie (V14) - demo jacket (V18)
 		assertThat(findSlug(r.body(), "longsleeve-black").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V15)
 		assertThat(findSlug(r.body(), "void-trace-hoodie-white").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V16)
 		assertThat(r.body().toString()).doesNotContain("event-horizon-hoodie");
+		assertThat(findSlug(r.body(), "void-trace-hoodie-navy").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V18)
+		assertThat(r.body().toString()).doesNotContain("accretion-shell-jacket");
 		var tee = findSlug(r.body(), "singularity-tee");
 		assertThat(tee.get("price").asInt()).isEqualTo(100000);
 		assertThat(tee.get("variants").get(0).get("stock").asInt()).isEqualTo(10); // exact inventory not revealed
