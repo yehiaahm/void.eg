@@ -89,8 +89,23 @@ class StoreFlowTests {
 		return r.body().get("accessToken").asText();
 	}
 
+	/**
+	 * The store sells only real pieces (V19 removed the V2 demo products), so these tests bring their own
+	 * fixtures: a priced tee with four sizes and an unpriced sweatpant. Idempotent (slug is unique).
+	 */
+	private void ensureFixtureProducts() {
+		db.update("insert ignore into products (slug, name_en, name_ar, description_en, description_ar, size_fit_en, size_fit_ar, price, status) "
+				+ "values ('singularity-tee', 'Test Tee', 'Test Tee', 'fixture', 'fixture', '', '', 100000, 'ACTIVE'), "
+				+ "('null-sweatpant', 'Test Sweatpant', 'Test Sweatpant', 'fixture', 'fixture', '', '', null, 'ACTIVE')");
+		db.update("insert ignore into product_variants (product_id, size, stock, position) "
+				+ "select p.id, s.size, 10, s.pos from products p cross join "
+				+ "(select 'S' as size, 0 as pos union all select 'M', 1 union all select 'L', 2 union all select 'XL', 3) s "
+				+ "where p.slug in ('singularity-tee', 'null-sweatpant')");
+	}
+
 	@BeforeEach
 	void data() {
+		ensureFixtureProducts();
 		db.update("update products set price = 100000 where slug = 'singularity-tee'");
 		db.update("update product_variants v join products p on p.id = v.product_id set v.stock = 10 where p.slug = 'singularity-tee'");
 		db.update("update shipping_zones set fee = 5000, enabled = true where code = 'cairo'");
@@ -103,7 +118,7 @@ class StoreFlowTests {
 		db.update("update product_variants v join products p on p.id = v.product_id set v.stock = 250 where p.slug = 'singularity-tee' and v.size = 'S'");
 		var r = call("GET", "/products", null, null, null);
 		assertThat(r.status()).isEqualTo(200);
-		assertThat(r.body().size()).isEqualTo(5); // V2 seed (4) + LONGSLEEVE_BLACK (V11) + white hoodie (V14) + navy hoodie (V18) - demo hoodie (V14) - demo jacket (V18)
+		assertThat(r.body().size()).isEqualTo(5); // 3 real pieces (longsleeve, white hoodie, navy hoodie) + the 2 test fixtures; the V2 demos are gone (V14, V18, V19)
 		assertThat(findSlug(r.body(), "longsleeve-black").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V15)
 		assertThat(findSlug(r.body(), "void-trace-hoodie-white").get("images").size()).isEqualTo(5); // 4 gallery photos + cutout (V16)
 		assertThat(r.body().toString()).doesNotContain("event-horizon-hoodie");
