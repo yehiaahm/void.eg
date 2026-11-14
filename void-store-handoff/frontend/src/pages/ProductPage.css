@@ -72,12 +72,6 @@
 .s-center {
   align-items: center;
 }
-.s-guide {
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-}
 .s-namerow {
   display: flex;
   justify-content: space-between;
@@ -207,79 +201,6 @@
 .s-pre {
   white-space: pre-line;
 }
-.s-specs {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 22px;
-  margin: 0;
-}
-.s-specs dt {
-  color: var(--faint);
-}
-.s-specs dd {
-  margin: 0;
-  color: var(--text);
-}
-.s-fitnote {
-  margin: 0;
-}
-.s-models {
-  width: 100%;
-  margin-top: 18px;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-.s-models caption {
-  padding-bottom: 8px;
-  text-align: start;
-}
-.s-models th,
-.s-models td {
-  padding: 11px 0;
-  border-top: 1px solid var(--line-2);
-  text-align: start;
-  font-weight: 400;
-  color: var(--text);
-}
-.s-models thead th {
-  padding: 8px 0;
-  border-top: 0;
-  font: 500 11px/1.4 var(--f-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-:root[lang='ar'] .s-models thead th {
-  font: 500 13px/1.4 var(--f-ar);
-  letter-spacing: 0;
-  text-transform: none;
-}
-.s-models td {
-  font-family: var(--f-mono);
-  font-variant-numeric: tabular-nums;
-}
-.s-models th:last-child,
-.s-models td:last-child {
-  text-align: end;
-}
-.s-modelsize {
-  display: inline-grid;
-  place-items: center;
-  min-width: 34px;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid var(--line-3);
-  font: 500 12px/1 var(--f-mono);
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
-}
-.s-models tr[data-active] .s-modelsize {
-  background: var(--text);
-  color: var(--ink);
-  border-color: var(--text);
-}
 .s-wornby {
   display: flex;
   flex-wrap: wrap;
@@ -315,9 +236,6 @@
 @media (hover: hover) and (pointer: fine) {
   .s-size:not(:disabled):hover {
     border-color: var(--text);
-  }
-  .s-guide:hover {
-    color: var(--text);
   }
 }
 
