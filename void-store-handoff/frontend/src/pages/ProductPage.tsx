@@ -155,7 +155,7 @@ function ProductView({ product }: { product: Product }) {
           <div className="s-gal" ref={gal} onScroll={onGalScroll}>
             {KINDS.map((k, i) => (
               <figure key={k} aria-label={t.imageOf(i + 1, KINDS.length)}>
-                <ProductMedia product={product} kind={k} sizes="(max-width: 900px) 100vw, 30vw" />
+                <ProductMedia product={product} kind={k} sizes="(max-width: 900px) 100vw, 30vw" eager />
                 {!hasPhoto(product, k) && (
                   <figcaption className="s-ph">
                     {t.productPhoto} · {t.imageKind[k]}
