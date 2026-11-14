@@ -31,6 +31,13 @@ export interface ProductDetails {
   care: Localized
 }
 
+/** A model who wears the piece in the photos: first name, height in cm, size worn. */
+export interface FitModel {
+  name: Localized
+  heightCm: number
+  size: Size
+}
+
 export interface Product {
   id: number
   slug: string
@@ -45,6 +52,8 @@ export interface Product {
   images: ProductImage[]
   details: ProductDetails
   sizeFit: Localized
+  /** Models wearing the piece (name, height, size). May be empty. */
+  fitModels: FitModel[]
 }
 
 export type DropStatus = 'upcoming' | 'live' | 'closed'

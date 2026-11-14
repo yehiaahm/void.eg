@@ -220,6 +220,88 @@
   margin: 0;
   color: var(--text);
 }
+.s-fitnote {
+  margin: 0;
+}
+.s-models {
+  width: 100%;
+  margin-top: 18px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.s-models caption {
+  padding-bottom: 8px;
+  text-align: start;
+}
+.s-models th,
+.s-models td {
+  padding: 11px 0;
+  border-top: 1px solid var(--line-2);
+  text-align: start;
+  font-weight: 400;
+  color: var(--text);
+}
+.s-models thead th {
+  padding: 8px 0;
+  border-top: 0;
+  font: 500 11px/1.4 var(--f-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+:root[lang='ar'] .s-models thead th {
+  font: 500 13px/1.4 var(--f-ar);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.s-models td {
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+.s-models th:last-child,
+.s-models td:last-child {
+  text-align: end;
+}
+.s-modelsize {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line-3);
+  font: 500 12px/1 var(--f-mono);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+.s-models tr[data-active] .s-modelsize {
+  background: var(--text);
+  color: var(--ink);
+  border-color: var(--text);
+}
+.s-wornby {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.s-wornlist {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+.s-wornitem {
+  display: inline-flex;
+  gap: 6px;
+  color: var(--text);
+}
+.s-wornsep {
+  color: var(--faint);
+}
 .s-more {
   margin-top: 64px;
 }

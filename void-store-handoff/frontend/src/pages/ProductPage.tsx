@@ -80,6 +80,9 @@ function ProductView({ product }: { product: Product }) {
   const variant = product.variants.find((v) => v.size === size)
   const soldOut = product.variants.every((v) => v.stock <= 0)
   const maxQty = Math.max(1, Math.min(MAX_QTY, variant?.stock ?? MAX_QTY))
+  // Models wearing the size the shopper picked (shown under the size buttons).
+  const fitModels = product.fitModels ?? []
+  const wornBy = size ? fitModels.filter((m) => m.size === size) : []
   const price = formatPrice(product.price, lang)
   const more = all.filter((p) => p.slug !== product.slug && p.dropId === product.dropId)
 
@@ -225,6 +228,24 @@ function ProductView({ product }: { product: Product }) {
                 {t.pickHint}
               </p>
             )}
+            {wornBy.length > 0 && (
+              <p className="s-wornby" aria-live="polite">
+                <span className="s-lab">{t.wornInSize(size as Size)}</span>
+                <span className="s-wornlist">
+                  {wornBy.map((m) => (
+                    <span key={l(m.name)} className="s-wornitem">
+                      <bdi>{l(m.name)}</bdi>
+                      <span className="s-wornsep" aria-hidden="true">
+                        ·
+                      </span>
+                      <bdi>
+                        {m.heightCm} {t.cm}
+                      </bdi>
+                    </span>
+                  ))}
+                </span>
+              </p>
+            )}
           </div>
 
           <div className="s-row s-center">
@@ -259,7 +280,40 @@ function ProductView({ product }: { product: Product }) {
             </details>
             <details className="s-det" ref={sizeFitRef}>
               <summary>{t.sizeFit}</summary>
-              <div className="s-pre">{l(product.sizeFit)}</div>
+              <div>
+                <p className="s-pre s-fitnote">{l(product.sizeFit)}</p>
+                {fitModels.length > 0 && (
+                  <table className="s-models">
+                    <caption className="s-lab">{t.onModels}</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">{t.modelCol}</th>
+                        <th scope="col">{t.heightCol}</th>
+                        <th scope="col">{t.wearsCol}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {fitModels.map((m) => (
+                        <tr key={l(m.name)} data-active={size === m.size || undefined}>
+                          <th scope="row">
+                            <bdi>{l(m.name)}</bdi>
+                          </th>
+                          <td>
+                            <bdi>
+                              {m.heightCm} {t.cm}
+                            </bdi>
+                          </td>
+                          <td>
+                            <span className="s-modelsize" dir="ltr">
+                              {m.size}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </details>
             <details className="s-det">
               <summary>{t.shippingReturns}</summary>
