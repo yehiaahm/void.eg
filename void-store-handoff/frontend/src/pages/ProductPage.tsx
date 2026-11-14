@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { assetUrl, useProduct, useProducts, useSettings } from '../api'
-import type { ImageKind, Product, Size } from '../api/types'
+import type { Product, Size } from '../api/types'
 import { BackIcon, MinusIcon, PlusIcon } from '../components/icons'
 import { ProductCard } from '../components/ProductCard'
-import { ProductMedia, hasPhoto } from '../components/ProductMedia'
 import { useDocumentTitle, useJsonLd } from '../hooks/useDocumentTitle'
 import { useI18n } from '../i18n'
 import { dropNo, formatPrice } from '../lib/format'
@@ -14,8 +13,6 @@ import { WishButton } from '../components/WishButton'
 import { flyToBag } from '../lib/flyToBag'
 import { NotFoundPage } from './NotFoundPage'
 import './ProductPage.css'
-
-const KINDS: ImageKind[] = ['front', 'back', 'detail', 'body']
 
 export function ProductPage() {
   const { slug = '' } = useParams()
@@ -46,6 +43,11 @@ function ProductView({ product }: { product: Product }) {
   const [qty, setQty] = useState(1)
   const [hint, setHint] = useState(false)
   const [gi, setGi] = useState(0)
+  // Only the pictures that are really there, in the order set in the admin. A deleted picture simply
+  // disappears (no empty slot); the card-only "cutout" is not part of the gallery. With no pictures at
+  // all a single placeholder tile is shown.
+  const gallery = product.images.filter((i) => i.kind !== 'cutout')
+  const slides = gallery.length ? gallery : [null]
   const gal = useRef<HTMLDivElement>(null)
   const sizeFitRef = useRef<HTMLDetailsElement>(null)
 
@@ -109,7 +111,7 @@ function ProductView({ product }: { product: Product }) {
   const onGalScroll = () => {
     const el = gal.current
     if (!el) return
-    const i = Math.min(KINDS.length - 1, Math.max(0, Math.round(Math.abs(el.scrollLeft) / (el.clientWidth || 1))))
+    const i = Math.min(slides.length - 1, Math.max(0, Math.round(Math.abs(el.scrollLeft) / (el.clientWidth || 1))))
     if (i !== gi) setGi(i)
   }
   const goImg = (i: number) => {
@@ -153,24 +155,25 @@ function ProductView({ product }: { product: Product }) {
       <div className="s-pgrid">
         <div>
           <div className="s-gal" ref={gal} onScroll={onGalScroll}>
-            {KINDS.map((k, i) => (
-              <figure key={k} aria-label={t.imageOf(i + 1, KINDS.length)}>
-                <ProductMedia product={product} kind={k} sizes="(max-width: 900px) 100vw, 30vw" eager />
-                {!hasPhoto(product, k) && (
-                  <figcaption className="s-ph">
-                    {t.productPhoto} · {t.imageKind[k]}
-                  </figcaption>
+            {slides.map((img, i) => (
+              <figure key={img ? img.url : 'placeholder'} aria-label={t.imageOf(i + 1, slides.length)}>
+                {img ? (
+                  <img src={assetUrl(img.url)} alt={l(img.alt) || ''} loading="eager" decoding="async" sizes="(max-width: 900px) 100vw, 30vw" />
+                ) : (
+                  <figcaption className="s-ph">{t.productPhoto}</figcaption>
                 )}
               </figure>
             ))}
           </div>
-          <div className="s-dots">
-            {KINDS.map((k, i) => (
-              <button key={k} type="button" className="s-dot" aria-label={t.imageOf(i + 1, KINDS.length)} aria-current={gi === i} onClick={() => goImg(i)}>
-                <span />
-              </button>
-            ))}
-          </div>
+          {slides.length > 1 && (
+            <div className="s-dots">
+              {slides.map((img, i) => (
+                <button key={img ? img.url : i} type="button" className="s-dot" aria-label={t.imageOf(i + 1, slides.length)} aria-current={gi === i} onClick={() => goImg(i)}>
+                  <span />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="s-info">
