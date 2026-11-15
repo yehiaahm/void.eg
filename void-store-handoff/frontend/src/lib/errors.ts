@@ -7,6 +7,8 @@ export function errorMessage(e: unknown, t: Strings): string {
     switch (e.code) {
       case 'bad_credentials':
         return t.badCredentials
+      case 'disabled':
+        return t.accountDisabled
       case 'email_taken':
         return t.emailTaken
       case 'invalid_phone':
@@ -31,6 +33,8 @@ export function errorMessage(e: unknown, t: Strings): string {
         return t.proofRequired
     }
     if (e.code.startsWith('coupon_')) return t.couponError[e.code.slice(7)] ?? t.couponError.invalid
+    // 5xx without our JSON body = the API is down or unreachable behind the dev proxy / reverse proxy.
+    if (e.code.startsWith('http_5')) return t.networkError
     return t.genericError
   }
   if (e instanceof TypeError) return t.networkError
