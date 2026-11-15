@@ -35,7 +35,7 @@ public class WaitlistController {
 	@PostMapping
 	@Transactional
 	public ResponseEntity<Void> join(@Valid @RequestBody JoinReq req, HttpServletRequest http) {
-		limiter.check("waitlist:" + http.getRemoteAddr(), 5, Duration.ofMinutes(10));
+		limiter.check("waitlist-ip:" + limiter.ip(http), 5, Duration.ofMinutes(10));
 		String phone = Phones.requireValid(req.phone());
 		// Signing up again with the same number updates the entry the owner hasn't handled yet.
 		var e = repo.findFirstByPhoneAndContactedFalseOrderByIdDesc(phone).orElseGet(WaitlistEntry::new);

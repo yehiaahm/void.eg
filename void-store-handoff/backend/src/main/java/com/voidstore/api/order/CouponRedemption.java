@@ -26,15 +26,27 @@ public class CouponRedemption {
 	@JoinColumn(name = "order_id")
 	private Order order;
 
+	/** Canonical e-mail (see CustomerIdentity); older rows hold the plain lower-cased address. */
 	@Column(nullable = false)
 	private String email;
 
+	private String phone;
+
+	@Column(name = "user_id")
+	private Long userId;
+
+	@Column(name = "address_key")
+	private String addressKey;
+
 	protected CouponRedemption() {}
 
-	public CouponRedemption(Coupon coupon, Order order, String email) {
+	public CouponRedemption(Coupon coupon, Order order, String email, String phone, Long userId, String addressKey) {
 		this.coupon = coupon;
 		this.order = order;
 		this.email = email;
+		this.phone = phone;
+		this.userId = userId;
+		this.addressKey = addressKey;
 	}
 
 	public Coupon getCoupon() { return coupon; }

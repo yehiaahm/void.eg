@@ -31,9 +31,11 @@ public class OrderEmails {
 	private final MailService mail;
 	private final SettingsService settings;
 	private final AppProperties props;
+	private final TrackingTokens tokens;
 
 	public OrderEmails(OrderRepository orders, ShippingZoneRepository zones, MailService mail, SettingsService settings,
-			AppProperties props) {
+			AppProperties props, TrackingTokens tokens) {
+		this.tokens = tokens;
 		this.orders = orders;
 		this.zones = zones;
 		this.mail = mail;
@@ -77,7 +79,9 @@ public class OrderEmails {
 	}
 
 	private String trackUrl(Order o) {
-		return props.frontendUrl().split(",")[0].trim() + "/" + o.getLang() + "/track?order=" + o.getNumber();
+		// the private token in the link is what lets a guest see the full order and cancel / return (VOID-04)
+		return props.frontendUrl().split(",")[0].trim() + "/" + o.getLang() + "/track?order=" + o.getNumber()
+				+ "&t=" + tokens.forOrder(o.getNumber());
 	}
 
 	private String summary(Order o, boolean ar) {

@@ -2,6 +2,7 @@ package com.voidstore.api.contact;
 
 import com.voidstore.api.admin.AdminOrderController.PageDto;
 import com.voidstore.api.admin.Roles;
+import com.voidstore.api.auth.AuditLog;
 import com.voidstore.api.common.ApiException;
 import java.time.Instant;
 import org.springframework.data.domain.PageRequest;
@@ -31,8 +32,10 @@ public class AdminContactController {
 	}
 
 	private final ContactMessageRepository repo;
+	private final AuditLog audit;
 
-	public AdminContactController(ContactMessageRepository repo) {
+	public AdminContactController(ContactMessageRepository repo, AuditLog audit) {
+		this.audit = audit;
 		this.repo = repo;
 	}
 
@@ -69,6 +72,7 @@ public class AdminContactController {
 	@Transactional
 	public ResponseEntity<Void> delete(@PathVariable long id) {
 		repo.delete(repo.findById(id).orElseThrow(() -> ApiException.notFound("Message")));
+		audit.info("admin.message.deleted", "message", id);
 		return ResponseEntity.noContent().build();
 	}
 }

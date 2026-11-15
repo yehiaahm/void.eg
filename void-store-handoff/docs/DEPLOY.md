@@ -16,7 +16,7 @@ cp .env.prod.example .env
 nano .env
 ```
 
-Fill in every value. Generate secrets with `openssl rand -base64 48`.
+Fill in every value. Generate secrets with `openssl rand -base64 48`. **The API will not start** if `JWT_SECRET` is missing, shorter than 32 bytes, a placeholder (for example anything copied from the examples) or not random enough. There is no built-in default. This also applies to any other platform you deploy to (Railway etc.): set `JWT_SECRET` and `COOKIE_SECURE=true` before the first start.
 
 - `DOMAIN` is the bare domain (no `https://`).
 - `MAIL_*` is any SMTP provider (Zoho Mail, Google Workspace, Brevo, Resend…). Without it the store still works, but no emails are sent.
@@ -31,12 +31,18 @@ docker compose -f docker-compose.prod.yml logs -f app     # wait for "Started Vo
 
 Caddy gets the HTTPS certificate automatically. Open `https://your-domain/admin` and sign in.
 
+### Reverse proxy and client IPs
+
+Rate limits and the audit log identify visitors by IP address. The app only believes `X-Forwarded-For` when the TCP peer is a *trusted proxy* (`TRUSTED_PROXIES`, a comma-separated CIDR list; default = loopback and private networks, which covers the Caddy container). A request that reaches the app directly from the internet has its forwarding header ignored. Keep the app port unpublished (as in `docker-compose.prod.yml`) and, if other private hosts can reach the app, narrow `TRUSTED_PROXIES` to the proxy's exact address range. On a platform proxy (Railway, Render…) make sure it overwrites or appends the real client address in `X-Forwarded-For`.
+
 ## 4. Update to a new version
 
 ```bash
 git pull
 docker compose -f docker-compose.prod.yml up -d --build
 ```
+
+`V10__security_hardening.sql` adds an order version column, extra coupon-redemption identity columns (phone, account, address hash) and the `unconfirmed_order_hours` setting. Take a database backup before updating. Guest tracking links in e-mails already sent before this update contain no token: those customers see the masked status view until they receive a new e-mail (any status change sends one).
 
 Database changes are applied automatically by Flyway on start-up (`backend/src/main/resources/db/migration`). Never edit a migration that already ran; add a new `V3__…sql` instead.
 

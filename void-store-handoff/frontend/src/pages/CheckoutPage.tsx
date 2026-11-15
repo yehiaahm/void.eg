@@ -47,7 +47,7 @@ export function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const { data: quote, isFetching } = useQuote(bag.lines, { governorate: f.governorate, coupon, email: f.email })
+  const { data: quote, isFetching } = useQuote(bag.lines, { governorate: f.governorate, coupon, email: f.email, phone: f.phone })
 
   // Prefill from the account.
   useEffect(() => {
@@ -111,7 +111,7 @@ export function CheckoutPage() {
       })
       qc.invalidateQueries({ queryKey: ['products'] })
       qc.invalidateQueries({ queryKey: ['product'] })
-      navigate(`/${lang}/order/${res.number}`, { replace: true, state: { email: f.email.trim(), total: res.total } })
+      navigate(`/${lang}/order/${res.number}`, { replace: true, state: { email: f.email.trim(), total: res.total, trackingToken: res.trackingToken } })
       bag.clear()
     } catch (e) {
       setSubmitting(false)

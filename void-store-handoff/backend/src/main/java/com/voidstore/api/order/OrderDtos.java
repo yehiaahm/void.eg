@@ -17,9 +17,10 @@ public final class OrderDtos {
 
 	// ---- requests ----
 
-	public record LineReq(@NotBlank String slug, @NotBlank String size, @Min(1) @Max(10) int qty) {}
+	public record LineReq(@NotBlank @Size(max = 120) String slug, @NotBlank @Size(max = 8) String size, @Min(1) @Max(10) int qty) {}
 
-	public record QuoteReq(@NotEmpty @Size(max = 30) List<@Valid LineReq> items, String governorate, String couponCode, String email) {}
+	public record QuoteReq(@NotEmpty @Size(max = 30) List<@Valid LineReq> items, @Size(max = 40) String governorate,
+			@Size(max = 40) String couponCode, @Size(max = 190) String email, @Size(max = 32) String phone) {}
 
 	public record ContactReq(
 			@NotBlank @Email @Size(max = 190) String email,
@@ -38,12 +39,16 @@ public final class OrderDtos {
 			@NotNull @Valid ContactReq contact,
 			@NotNull @Valid AddressReq address,
 			@Size(max = 1000) String note,
-			String couponCode,
-			@NotBlank String paymentMethod,
-			String lang,
+			@Size(max = 40) String couponCode,
+			@NotBlank @Size(max = 16) String paymentMethod,
+			@Size(max = 5) String lang,
 			Boolean saveAddress) {}
 
-	public record TrackReq(@NotBlank @Size(max = 20) String number, @NotBlank @Size(max = 32) String phone) {}
+	/**
+	 * Guest proof of ownership. {@code token} (from the e-mailed link) gives the full order and the right to cancel or
+	 * return; {@code phone} alone only gives a masked, read-only status view.
+	 */
+	public record TrackReq(@NotBlank @Size(max = 20) String number, @Size(max = 32) String phone, @Size(max = 128) String token) {}
 
 	// ---- responses ----
 
@@ -54,7 +59,8 @@ public final class OrderDtos {
 	public record QuoteRes(List<QuoteLine> items, int subtotal, int discount, Integer shipping, Integer total,
 			String couponCode, String couponError, boolean freeShipping, List<String> paymentMethods) {}
 
-	public record PlaceRes(String number, int total, String paymentMethod, String redirectUrl) {}
+	/** {@code trackingToken}: the guest's private link secret, shown once here and in the confirmation e-mail. */
+	public record PlaceRes(String number, int total, String paymentMethod, String redirectUrl, String trackingToken) {}
 
 	/** returnableQty: pieces the customer can still ask to return / exchange (0 when not eligible). */
 	public record ItemDto(long id, String slug, String name, String size, String sku, String image, int unitPrice, int qty,
@@ -87,6 +93,46 @@ public final class OrderDtos {
 						.map(e -> new EventDto(e.getType().name(), name(e.getFromStatus()), name(e.getToStatus()), "", "", e.getCreatedAt()))
 						.toList(),
 				canCancel, returnUntil, returns);
+	}
+
+	/**
+	 * Reduces a customer view for guests so personal data is not exposed unnecessarily (VOID-04). Phone and e-mail
+	 * are always masked. With {@code full} (the caller holds the private token) name and delivery address stay
+	 * visible; without it (phone-only proof) the view is read-only status information with no address, no actions.
+	 */
+	public static OrderDto forGuest(OrderDto d, boolean full) {
+		var returns = d.returns().stream().map(r -> new com.voidstore.api.returns.ReturnDtos.ReturnDto(r.number(), r.type(),
+				r.status(), r.reason(), "", r.refundAmount(), r.createdAt(), r.items(), r.timeline())).toList();
+		if (full) {
+			return new OrderDto(d.number(), d.status(), d.paymentMethod(), d.paymentStatus(), d.createdAt(), d.name(),
+					maskPhone(d.phone()), maskEmail(d.email()), d.governorate(), d.city(), d.street(), d.building(),
+					d.addressNotes(), d.items(), d.subtotal(), d.discount(), d.shipping(), d.total(), d.couponCode(),
+					d.timeline(), d.canCancel(), d.returnUntil(), d.returns());
+		}
+		var items = d.items().stream().map(i -> new ItemDto(i.id(), i.slug(), i.name(), i.size(), i.sku(), i.image(),
+				i.unitPrice(), i.qty(), i.lineTotal(), i.returnedQty(), 0)).toList();
+		return new OrderDto(d.number(), d.status(), d.paymentMethod(), d.paymentStatus(), d.createdAt(), initials(d.name()),
+				maskPhone(d.phone()), maskEmail(d.email()), d.governorate(), "", "", "", "", items, d.subtotal(),
+				d.discount(), d.shipping(), d.total(), null, d.timeline(), false, null, returns);
+	}
+
+	static String maskPhone(String p) {
+		if (p == null || p.length() < 6) return "";
+		return p.substring(0, 3) + "*".repeat(p.length() - 5) + p.substring(p.length() - 2);
+	}
+
+	static String maskEmail(String e) {
+		if (e == null) return "";
+		int at = e.indexOf('@');
+		if (at < 1) return "";
+		return e.charAt(0) + "***" + e.substring(at);
+	}
+
+	static String initials(String name) {
+		if (name == null || name.isBlank()) return "";
+		var sb = new StringBuilder();
+		for (String part : name.trim().split("\s+")) sb.append(part.codePointAt(0) == 0 ? "" : new String(Character.toChars(part.codePointAt(0)))).append(". ");
+		return sb.toString().trim();
 	}
 
 	public static List<ItemDto> items(Order o) {

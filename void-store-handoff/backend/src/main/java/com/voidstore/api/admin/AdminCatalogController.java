@@ -1,5 +1,6 @@
 package com.voidstore.api.admin;
 
+import com.voidstore.api.auth.AuditLog;
 import com.voidstore.api.catalog.Drop;
 import com.voidstore.api.catalog.DropRepository;
 import com.voidstore.api.catalog.Product;
@@ -83,9 +84,11 @@ public class AdminCatalogController {
 	private final ImageStorage storage;
 	private final EntityManager em;
 	private final WishlistRepository wishlist;
+	private final AuditLog audit;
 
 	public AdminCatalogController(ProductRepository products, DropRepository drops, ImageStorage storage, EntityManager em,
-			WishlistRepository wishlist) {
+			WishlistRepository wishlist, AuditLog audit) {
+		this.audit = audit;
 		this.wishlist = wishlist;
 		this.products = products;
 		this.drops = drops;
@@ -152,6 +155,7 @@ public class AdminCatalogController {
 		var p = new Product();
 		apply(p, req);
 		products.saveAndFlush(p);
+		audit.info("admin.product.created", "product", p.getId(), "slug", p.getSlug());
 		return dto(p);
 	}
 
@@ -165,6 +169,7 @@ public class AdminCatalogController {
 		}
 		apply(p, req);
 		products.flush();
+		audit.info("admin.product.updated", "product", id, "price", p.getPrice() == null ? "" : p.getPrice(), "status", p.getStatus());
 		return dto(p);
 	}
 
@@ -242,6 +247,7 @@ public class AdminCatalogController {
 	@Transactional
 	public ResponseEntity<Void> deleteProduct(@PathVariable long id) {
 		var p = product(id);
+		audit.warn("admin.product.deleted", "product", id, "slug", p.getSlug());
 		long ordered = em.createQuery("select count(i) from OrderItem i where i.product.id = :id", Long.class)
 				.setParameter("id", id).getSingleResult();
 		if (ordered > 0) {
@@ -363,6 +369,7 @@ public class AdminCatalogController {
 	public ResponseEntity<Void> deleteDrop(@PathVariable long id) {
 		var d = drops.findById(id).orElseThrow(() -> ApiException.notFound("Drop"));
 		drops.delete(d); // products keep existing; their drop_id is set to NULL by the FK
+		audit.info("admin.drop.deleted", "drop", id);
 		return ResponseEntity.noContent().build();
 	}
 

@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.Version;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -97,6 +98,10 @@ public class Order {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Status status = Status.NEW;
+
+	/** Optimistic lock: a concurrent status change fails instead of silently overwriting (PV-1). */
+	@Version
+	private long version;
 
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt = Instant.now();

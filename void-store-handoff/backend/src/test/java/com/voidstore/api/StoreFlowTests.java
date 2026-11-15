@@ -33,7 +33,8 @@ import tools.jackson.databind.json.JsonMapper;
 		"void.bootstrap.owner-email=owner@test.local",
 		"void.bootstrap.owner-password=owner-test-password",
 		"void.rate-limit-enabled=false",
-		"void.jwt.secret=test-secret-0123456789abcdef0123456789abcdef",
+		"void.orders.max-open-per-customer=1000", // the flow tests place many orders with one synthetic phone
+		"void.jwt.secret=kT7vQ2mX9pLr4sYw1ZcN8bHf3JdG6aUe0TqXiOvE5yMrB",
 		"spring.mail.host=localhost",
 		"spring.mail.port=1"
 })
@@ -48,6 +49,9 @@ class StoreFlowTests {
 
 	@Autowired
 	JdbcTemplate db;
+
+	@Autowired
+	com.voidstore.api.order.StaleOrderJob staleOrders;
 
 	final HttpClient http = HttpClient.newHttpClient();
 	final JsonMapper json = JsonMapper.builder().build();
@@ -141,6 +145,7 @@ class StoreFlowTests {
 		var tracked = post("/orders/track", "{\"number\":\"" + r.body().get("number").asText() + "\",\"phone\":\"01001234567\"}");
 		assertThat(tracked.status()).isEqualTo(200);
 		assertThat(tracked.body().get("status").asText()).isEqualTo("NEW");
+		assertThat(r.body().get("trackingToken").asText()).hasSize(43);
 		var wrongPhone = post("/orders/track", "{\"number\":\"" + r.body().get("number").asText() + "\",\"phone\":\"01111111111\"}");
 		assertThat(wrongPhone.status()).isEqualTo(404);
 	}
@@ -186,7 +191,10 @@ class StoreFlowTests {
 		assertThat(post("/orders", order("singularity-tee", "S", 1, "01001234567", "TEN")).status()).isEqualTo(200);
 		var again = post("/orders", order("singularity-tee", "S", 1, "01001234567", "TEN"));
 		assertThat(again.status()).isEqualTo(400);
-		assertThat(again.body().get("code").asText()).isEqualTo("coupon_already_used");
+		assertThat(again.body().get("code").asText()).isEqualTo("coupon_invalid"); // generic: never says why
+		// VOID-05: a different e-mail does not give a second allowance - the phone / address is the same customer
+		var otherEmail = order("singularity-tee", "S", 1, "01001234567", "TEN").replace("buyer@example.com", "someone-else@example.com");
+		assertThat(post("/orders", otherEmail).body().get("code").asText()).isEqualTo("coupon_invalid");
 	}
 
 	@Test
@@ -235,25 +243,107 @@ class StoreFlowTests {
 	}
 
 	@Test
-	void guestCanCancelANewOrderOnly() throws Exception {
-		String number = post("/orders", order("singularity-tee", "S", 2, "01001234567", null)).body().get("number").asText();
+	void guestCanCancelANewOrderOnlyWithTheTokenNotWithAPhone() throws Exception {
+		var placed = post("/orders", order("singularity-tee", "S", 2, "01001234567", null));
+		String number = placed.body().get("number").asText();
+		String token = placed.body().get("trackingToken").asText();
 		assertThat(stock("singularity-tee", "S")).isEqualTo(8);
-		var wrong = post("/orders/cancel", "{\"number\":\"" + number + "\",\"phone\":\"01111111111\"}");
-		assertThat(wrong.status()).isEqualTo(404);
-		var ok = post("/orders/cancel", "{\"number\":\"" + number + "\",\"phone\":\"01001234567\"}");
+		// phone alone is not proof of ownership
+		assertThat(post("/orders/cancel", "{\"number\":\"" + number + "\",\"phone\":\"01001234567\"}").status()).isEqualTo(400);
+		assertThat(post("/orders/cancel", "{\"number\":\"" + number + "\",\"token\":\"wrong\"}").status()).isEqualTo(404);
+		assertThat(stock("singularity-tee", "S")).isEqualTo(8);
+		var ok = post("/orders/cancel", "{\"number\":\"" + number + "\",\"token\":\"" + token + "\"}");
 		assertThat(ok.status()).isEqualTo(200);
 		assertThat(ok.body().get("status").asText()).isEqualTo("CANCELLED");
 		assertThat(stock("singularity-tee", "S")).isEqualTo(10);
-		assertThat(post("/orders/cancel", "{\"number\":\"" + number + "\",\"phone\":\"01001234567\"}").status()).isEqualTo(400);
+		assertThat(post("/orders/cancel", "{\"number\":\"" + number + "\",\"token\":\"" + token + "\"}").status()).isEqualTo(400);
+	}
+
+	@Test
+	void phoneOnlyTrackingIsMaskedAndTheTokenGivesTheFullButMaskedContactView() throws Exception {
+		var placed = post("/orders", order("singularity-tee", "S", 1, "01001234567", null));
+		String number = placed.body().get("number").asText();
+		var weak = post("/orders/track", "{\"number\":\"" + number + "\",\"phone\":\"01001234567\"}").body();
+		assertThat(weak.get("phone").asText()).isEqualTo("010******67");
+		assertThat(weak.get("email").asText()).startsWith("b***@");
+		assertThat(weak.get("street").asText()).isEmpty();
+		assertThat(weak.get("canCancel").asBoolean()).isFalse();
+		var strong = post("/orders/track", "{\"number\":\"" + number + "\",\"token\":\"" + placed.body().get("trackingToken").asText() + "\"}").body();
+		assertThat(strong.get("street").asText()).isEqualTo("1 Test St");
+		assertThat(strong.get("phone").asText()).isEqualTo("010******67");
+		assertThat(strong.get("canCancel").asBoolean()).isTrue();
+		assertThat(post("/orders/track", "{\"number\":\"" + number + "\"}").body().get("code").asText()).isEqualTo("proof_required");
+	}
+
+	@Test
+	void concurrentCancelsRestockExactlyOnce() throws Exception {
+		var placed = post("/orders", order("singularity-tee", "M", 3, "01001234567", null));
+		String number = placed.body().get("number").asText();
+		String body = "{\"number\":\"" + number + "\",\"token\":\"" + placed.body().get("trackingToken").asText() + "\"}";
+		assertThat(stock("singularity-tee", "M")).isEqualTo(7);
+		var pool = Executors.newFixedThreadPool(6);
+		List<Future<Integer>> results = new ArrayList<>();
+		for (int i = 0; i < 6; i++) {
+			Callable<Integer> c = () -> post("/orders/cancel", body).status();
+			results.add(pool.submit(c));
+		}
+		int ok = 0;
+		for (var f : results) if (f.get() == 200) ok++;
+		pool.shutdown();
+		assertThat(ok).isEqualTo(1);                                  // one cancel wins, the rest see it is already cancelled
+		assertThat(stock("singularity-tee", "M")).isEqualTo(10);      // PV-1: not 13, 16, ...
+	}
+
+	@Test
+	void quoteDoesNotRevealWhyACouponFailed() throws Exception {
+		db.update("insert into coupons (code, type, value, active, ends_at) values ('OLD', 'PERCENT', 10, true, '2020-01-01 00:00:00')");
+		String q = "{\"items\":[{\"slug\":\"singularity-tee\",\"size\":\"S\",\"qty\":1}],\"governorate\":\"cairo\",\"couponCode\":\"%s\"}";
+		assertThat(post("/orders/quote", q.formatted("OLD")).body().get("couponError").asText()).isEqualTo("invalid");
+		assertThat(post("/orders/quote", q.formatted("NOPE")).body().get("couponError").asText()).isEqualTo("invalid");
+	}
+
+	@Test
+	void anOrderCannotHoldMoreThanTenPieces() throws Exception {
+		String two = """
+				{"items":[{"slug":"singularity-tee","size":"M","qty":6},{"slug":"singularity-tee","size":"L","qty":5}],
+				 "contact":{"email":"buyer@example.com","name":"Buyer","phone":"01001234567"},
+				 "address":{"governorate":"cairo","city":"Nasr City","street":"1 Test St"},
+				 "paymentMethod":"COD","lang":"en"}""";
+		var r = post("/orders", two);
+		assertThat(r.status()).isEqualTo(400);
+		assertThat(r.body().get("code").asText()).isEqualTo("too_many_items");
+	}
+
+	@Test
+	void unconfirmedOrdersAreCancelledAutomaticallyAndRestocked() throws Exception {
+		var placed = post("/orders", order("singularity-tee", "M", 2, "01001234567", null));
+		String number = placed.body().get("number").asText();
+		assertThat(stock("singularity-tee", "M")).isEqualTo(8);
+		db.update("update orders set created_at = date_sub(utc_timestamp(6), interval 100 hour) where number = ?", number);
+		staleOrders.run();
+		assertThat(db.queryForObject("select status from orders where number = ?", String.class, number)).isEqualTo("CANCELLED");
+		assertThat(stock("singularity-tee", "M")).isEqualTo(10);
+	}
+
+	@Test
+	void shippingZonesAreValidated() throws Exception {
+		String owner = login("owner@test.local", "owner-test-password");
+		var id = db.queryForObject("select id from shipping_zones where code = 'cairo'", Long.class);
+		var bad = call("PUT", "/admin/shipping-zones", "[{\"id\":" + id + ",\"fee\":2147483647,\"etaDays\":\"1\",\"enabled\":true}]", owner, null);
+		assertThat(bad.status()).isEqualTo(400);
+		assertThat(bad.body().get("code").asText()).isEqualTo("validation");
+		assertThat(db.queryForObject("select fee from shipping_zones where code = 'cairo'", Integer.class)).isEqualTo(5000);
 	}
 
 	@Test
 	void exchangeAndReturnMoveStockExactlyOnce() throws Exception {
 		String owner = login("owner@test.local", "owner-test-password");
-		String number = post("/orders", order("singularity-tee", "M", 3, "01001234567", null)).body().get("number").asText();
-		var track = post("/orders/track", "{\"number\":\"" + number + "\",\"phone\":\"01001234567\"}");
+		var placed = post("/orders", order("singularity-tee", "M", 3, "01001234567", null));
+		String number = placed.body().get("number").asText();
+		String token = placed.body().get("trackingToken").asText();
+		var track = post("/orders/track", "{\"number\":\"" + number + "\",\"token\":\"" + token + "\"}");
 		long itemId = track.body().get("items").get(0).get("id").asLong();
-		String guest = "\"number\":\"" + number + "\",\"phone\":\"01001234567\"";
+		String guest = "\"number\":\"" + number + "\",\"token\":\"" + token + "\"";
 
 		// not delivered yet → no returns
 		var early = post("/orders/returns", "{" + guest + ",\"type\":\"EXCHANGE\",\"reason\":\"SIZE\",\"items\":[{\"itemId\":" + itemId + ",\"qty\":1,\"exchangeSize\":\"L\"}]}");

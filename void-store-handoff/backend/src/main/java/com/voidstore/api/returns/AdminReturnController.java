@@ -2,6 +2,7 @@ package com.voidstore.api.returns;
 
 import com.voidstore.api.admin.AdminOrderController.PageDto;
 import com.voidstore.api.admin.Roles;
+import com.voidstore.api.auth.AuditLog;
 import com.voidstore.api.auth.CurrentUser;
 import com.voidstore.api.common.ApiException;
 import com.voidstore.api.returns.ReturnDtos.EventDto;
@@ -43,8 +44,10 @@ public class AdminReturnController {
 
 	private final ReturnRepository returns;
 	private final ReturnService service;
+	private final AuditLog audit;
 
-	public AdminReturnController(ReturnRepository returns, ReturnService service) {
+	public AdminReturnController(ReturnRepository returns, ReturnService service, AuditLog audit) {
+		this.audit = audit;
 		this.returns = returns;
 		this.service = service;
 	}
@@ -110,6 +113,8 @@ public class AdminReturnController {
 		}
 		if (to == ReturnRequest.Status.CANCELLED) throw ApiException.badRequest("bad_status", "Reject the request instead");
 		service.changeStatus(r, to, req.note(), req.refundAmount(), CurrentUser.require().name());
+		// refunds are money: always recorded with the amount
+		audit.info("admin.return.status", "return", number, "to", to, "refund", r.getRefundAmount() == null ? "" : r.getRefundAmount());
 		returns.flush();
 		return detail(r);
 	}

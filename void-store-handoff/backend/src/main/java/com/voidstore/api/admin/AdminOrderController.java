@@ -2,6 +2,7 @@ package com.voidstore.api.admin;
 
 import static com.voidstore.api.common.Csv.csv;
 
+import com.voidstore.api.auth.AuditLog;
 import com.voidstore.api.auth.CurrentUser;
 import com.voidstore.api.common.ApiException;
 import com.voidstore.api.order.Order;
@@ -67,8 +68,10 @@ public class AdminOrderController {
 	private final OrderRepository orders;
 	private final OrderService service;
 	private final UserRepository users;
+	private final AuditLog audit;
 
-	public AdminOrderController(OrderRepository orders, OrderService service, UserRepository users) {
+	public AdminOrderController(OrderRepository orders, OrderService service, UserRepository users, AuditLog audit) {
+		this.audit = audit;
 		this.orders = orders;
 		this.service = service;
 		this.users = users;
@@ -141,7 +144,9 @@ public class AdminOrderController {
 	public AdminOrderDto status(@PathVariable String number, @Valid @RequestBody StatusReq req) {
 		var to = parseStatus(req.status());
 		if (to == null) throw ApiException.badRequest("bad_status", "Unknown status");
-		return dto(service.changeStatus(order(number), to, req.note(), actor()));
+		var changed = service.changeStatus(order(number), to, req.note(), actor());
+		audit.info("admin.order.status", "order", number, "to", to);
+		return dto(changed);
 	}
 
 	@PostMapping("/orders/{number}/notes")
@@ -167,6 +172,7 @@ public class AdminOrderController {
 		o.setBuilding(req.building());
 		o.setAddressNotes(req.addressNotes());
 		o.getEvents().add(new OrderEvent(o, OrderEvent.Type.NOTE, null, null, "Delivery details edited", actor()));
+		audit.info("admin.order.address_edited", "order", number);
 		return dto(o);
 	}
 
@@ -177,6 +183,9 @@ public class AdminOrderController {
 		var list = orders.search(parseStatus(status), blankToNull(q), day(from, false), day(to, true),
 				PageRequest.of(0, 10_000, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent();
 		var fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(CAIRO);
+		// every export of customer data is logged; big ones are flagged for alerting
+		if (list.size() >= AuditLog.LARGE_EXPORT_ROWS) audit.warn("export.orders.large", "rows", list.size(), "filtered", status != null || q != null || from != null || to != null);
+		else audit.info("export.orders", "rows", list.size());
 		var sb = new StringBuilder("﻿"); // BOM so Excel opens Arabic correctly
 		sb.append("Number,Date,Status,Payment,Payment status,Name,Phone,Email,Governorate,City,Street,Items,Subtotal,Discount,Shipping,Total,Coupon\n");
 		for (var o : list) {

@@ -34,8 +34,11 @@ public class ReturnEmails {
 	private final MailService mail;
 	private final SettingsService settings;
 	private final AppProperties props;
+	private final com.voidstore.api.order.TrackingTokens tokens;
 
-	public ReturnEmails(ReturnRepository returns, MailService mail, SettingsService settings, AppProperties props) {
+	public ReturnEmails(ReturnRepository returns, MailService mail, SettingsService settings, AppProperties props,
+			com.voidstore.api.order.TrackingTokens tokens) {
+		this.tokens = tokens;
 		this.returns = returns;
 		this.mail = mail;
 		this.settings = settings;
@@ -72,7 +75,7 @@ public class ReturnEmails {
 		String kind = r.getType() == ReturnRequest.Type.EXCHANGE ? (ar ? "استبدال" : "Exchange") : (ar ? "استرجاع" : "Return");
 		String body = "<p>" + esc(ar ? c[3] : c[2]) + "</p><p>" + kind + " <b dir=\"ltr\">" + esc(r.getNumber()) + "</b> · "
 				+ (ar ? "طلب " : "order ") + "<span dir=\"ltr\">" + esc(o.getNumber()) + "</span></p>"
-				+ EmailLayout.button(origin() + "/" + o.getLang() + "/track?order=" + o.getNumber(), ar ? "تابع الطلب" : "View order");
+				+ EmailLayout.button(origin() + "/" + o.getLang() + "/track?order=" + o.getNumber() + "&t=" + tokens.forOrder(o.getNumber()), ar ? "تابع الطلب" : "View order");
 		mail.send(o.getEmail(), "VOID — " + (ar ? c[1] : c[0]), EmailLayout.wrap(o.getLang(), body));
 	}
 

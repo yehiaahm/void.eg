@@ -47,7 +47,7 @@ public class ContactController {
 
 	@PostMapping
 	public ResponseEntity<Void> send(@Valid @RequestBody ContactReq req, HttpServletRequest http) {
-		limiter.check("contact:" + http.getRemoteAddr(), 5, Duration.ofMinutes(10));
+		limiter.check("contact-ip:" + limiter.ip(http), 5, Duration.ofMinutes(10));
 		var m = new ContactMessage();
 		m.setName(req.name().trim());
 		m.setEmail(User.normalizeEmail(req.email()));

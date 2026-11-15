@@ -42,7 +42,9 @@ server:
     enabled: true
     min-response-size: 1KB
     mime-types: text/html,text/css,application/javascript,text/javascript,application/json,image/svg+xml,application/xml,text/plain
-  forward-headers-strategy: framework
+  # X-Forwarded-* is deliberately NOT applied by the container: ClientIpResolver reads X-Forwarded-For only when the
+  # TCP peer is a trusted proxy (void.trusted-proxies), so a client can never choose its own rate-limit identity.
+  forward-headers-strategy: none
 
 management:
   endpoints:
@@ -51,12 +53,16 @@ management:
         include: health
 
 void:
+  # CIDR list of reverse proxies whose X-Forwarded-For is believed (default: loopback + private networks, i.e. Caddy).
+  # Set TRUSTED_PROXIES to the exact proxy range if the app can be reached from other private hosts.
+  trusted-proxies: ${TRUSTED_PROXIES:127.0.0.0/8,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16,fc00::/7,fe80::/10}
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   uploads-dir: ${UPLOADS_DIR:uploads}
   mail-from: ${MAIL_FROM:VOID <orders@void.local>}
   jwt:
-    # Development secret only — production MUST set JWT_SECRET (32+ random bytes).
-    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef0123456789}
+    # No default on purpose: the app refuses to start without a strong random secret (JwtSecretPolicy).
+    # Production: JWT_SECRET env var. Development: void.jwt.secret in backend/local.properties.
+    secret: ${JWT_SECRET:}
     access-minutes: ${JWT_ACCESS_MINUTES:15}
     refresh-days: ${JWT_REFRESH_DAYS:30}
     secure-cookie: ${COOKIE_SECURE:false}

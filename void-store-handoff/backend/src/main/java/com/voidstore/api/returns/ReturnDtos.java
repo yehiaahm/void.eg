@@ -16,17 +16,17 @@ public final class ReturnDtos {
 	public record ItemReq(@NotNull Long itemId, @Min(1) @Max(10) int qty, @Size(max = 8) String exchangeSize) {}
 
 	public record CreateReq(
-			@NotBlank String type,
-			@NotBlank String reason,
+			@NotBlank @Size(max = 16) String type,
+			@NotBlank @Size(max = 24) String reason,
 			@Size(max = 1000) String note,
 			@NotEmpty @Size(max = 30) List<@Valid ItemReq> items) {}
 
-	/** Guest version: proves ownership with the order number + phone, like tracking. */
+	/** Guest version: proves ownership with the order number + the private tracking token from the e-mailed link. */
 	public record GuestCreateReq(
 			@NotBlank @Size(max = 20) String number,
-			@NotBlank @Size(max = 32) String phone,
-			@NotBlank String type,
-			@NotBlank String reason,
+			@NotBlank @Size(max = 128) String token,
+			@NotBlank @Size(max = 16) String type,
+			@NotBlank @Size(max = 24) String reason,
 			@Size(max = 1000) String note,
 			@NotEmpty @Size(max = 30) List<@Valid ItemReq> items) {}
 

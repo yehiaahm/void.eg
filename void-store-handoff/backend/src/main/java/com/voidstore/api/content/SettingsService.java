@@ -15,7 +15,7 @@ public class SettingsService {
 	public static final Set<String> EDITABLE = Set.of(
 			"shipping_returns_en", "shipping_returns_ar", "instagram_url", "tiktok_url",
 			"contact_email", "contact_phone", "cod_enabled", "low_stock_threshold", "return_window_days",
-			"store_closed", "closed_message_en", "closed_message_ar");
+			"store_closed", "closed_message_en", "closed_message_ar", "unconfirmed_order_hours");
 
 	private final SettingRepository repo;
 

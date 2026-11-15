@@ -17,7 +17,7 @@ export function OrderPlacedPage() {
   const { lang, t } = useI18n()
   const { user } = useAuth()
   const flash = useToast()
-  const state = (useLocation().state ?? {}) as { email?: string; total?: number }
+  const state = (useLocation().state ?? {}) as { email?: string; total?: number; trackingToken?: string }
   useDocumentTitle(`${t.thanks} — VOID`)
 
   const copy = async () => {
@@ -69,7 +69,7 @@ export function OrderPlacedPage() {
           </p>
         )}
         <div className="s-done-in s-done-actions" style={{ animationDelay: '2.3s' }}>
-          <Link className="s-add" to={user ? `/${lang}/account/orders/${number}` : `/${lang}/track?order=${number}`}>
+          <Link className="s-add" to={user ? `/${lang}/account/orders/${number}` : `/${lang}/track?order=${number}${state.trackingToken ? `&t=${encodeURIComponent(state.trackingToken)}` : ''}`}>
             {t.trackOrder}
           </Link>
           <Link className="s-cta" to={`/${lang}`}>

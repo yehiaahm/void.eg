@@ -29,14 +29,15 @@ export const api = {
   zones: () => http.get<ShippingZone[]>('/shipping-zones'),
   page: (slug: string) => http.get<StorePage>(`/pages/${encodeURIComponent(slug)}`),
 
-  quote: (items: LineInput[], governorate?: string, couponCode?: string, email?: string) =>
-    http.post<Quote>('/orders/quote', { items, governorate, couponCode, email }),
+  quote: (items: LineInput[], governorate?: string, couponCode?: string, email?: string, phone?: string) =>
+    http.post<Quote>('/orders/quote', { items, governorate, couponCode, email, phone }),
   placeOrder: (input: PlaceOrderInput) => http.post<PlaceOrderResult>('/orders', input as unknown as Record<string, unknown>),
   joinWaitlist: (input: WaitlistInput) => http.post<void>('/waitlist', input as unknown as Record<string, unknown>),
   sendContact: (input: ContactInput) => http.post<void>('/contact', input as unknown as Record<string, unknown>),
-  track: (number: string, phone: string) => http.post<Order>('/orders/track', { number, phone }),
-  guestCancel: (number: string, phone: string) => http.post<Order>('/orders/cancel', { number, phone }),
-  guestReturn: (number: string, phone: string, r: ReturnInput) => http.post<Order>('/orders/returns', { number, phone, ...r }),
+  /** `token` (from the e-mailed link) = full view + actions; `phone` alone = masked, read-only status. */
+  track: (number: string, proof: { token?: string; phone?: string }) => http.post<Order>('/orders/track', { number, ...proof }),
+  guestCancel: (number: string, token: string) => http.post<Order>('/orders/cancel', { number, token }),
+  guestReturn: (number: string, token: string, r: ReturnInput) => http.post<Order>('/orders/returns', { number, token, ...r }),
   myReturn: (number: string, r: ReturnInput) =>
     http.post<Order>(`/me/orders/${encodeURIComponent(number)}/returns`, r as unknown as Record<string, unknown>, true),
 

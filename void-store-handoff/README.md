@@ -29,8 +29,16 @@ Create `backend/local.properties` (git-ignored) with your local owner account an
 ```properties
 void.bootstrap.owner-email=owner@void.local
 void.bootstrap.owner-password=choose-a-local-password
-void.jwt.secret=any-random-string-of-at-least-32-characters
+void.jwt.secret=<paste a random secret, see below>
 ```
+
+The API **refuses to start** without a strong random `void.jwt.secret` (>= 32 bytes; placeholders, short or low-entropy values are rejected). Generate one with `openssl rand -base64 48`, or on Windows PowerShell:
+
+```powershell
+[Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }) -as [byte[]])
+```
+
+`run-all.bat` creates a valid `local.properties` for you.
 
 ```bash
 cd backend && ./mvnw spring-boot:run          # API on :8080 (Flyway creates + seeds the DB)
@@ -61,6 +69,9 @@ The tests cover checkout totals, stock locking under concurrent orders (no overs
 - **Wishlist:** hearts on every product. Guests keep it on the device; it moves into the account at sign-in. Admin → Products shows how many people saved each piece.
 - **Payments:** cash on delivery. Online payment (Paymob) plugs into `backend/.../payment/PaymentProvider` without touching checkout.
 - **Roles:** Staff (orders, customers, stock) · Admin (everything but the team) · Owner (everything, including the team).
+- **Guest orders:** the confirmation e-mail link carries a private token (`/track?order=…&t=…`). Only that link shows the delivery details and lets a guest cancel or request a return. Order number + phone alone shows a masked, read-only status.
+- **Unconfirmed orders:** cash-on-delivery orders that nobody confirms within *Admin → Content → “Cancel orders nobody confirmed after (hours)”* (default 72, 0 = never) are cancelled automatically and the stock goes back on the shelf. A customer can have at most 2 unconfirmed orders at a time and an order holds at most 10 pieces.
+- **Security log:** security-relevant events (logins, token reuse, password resets, staff changes, exports, refunds, rate-limit hits) are written to the `AUDIT` logger, one `event=… actor=… ip=…` line each. Collect the container's stdout and alert on `auth.login.failed` bursts, `auth.refresh.reuse`, `staff.*`, `export.*.large` and `rate_limit.exceeded`.
 - **Placeholders:** prices are empty, and texts like `[FABRIC]` are shown as-is until the owner fills them in the admin — they are never invented.
 
 ## Before launch — the owner fills these in the admin

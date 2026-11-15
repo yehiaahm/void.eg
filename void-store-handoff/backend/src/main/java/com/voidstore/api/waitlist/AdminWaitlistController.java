@@ -5,6 +5,7 @@ import static com.voidstore.api.common.Csv.csv;
 import com.voidstore.api.admin.AdminOrderController;
 import com.voidstore.api.admin.AdminOrderController.PageDto;
 import com.voidstore.api.admin.Roles;
+import com.voidstore.api.auth.AuditLog;
 import com.voidstore.api.common.ApiException;
 import com.voidstore.api.common.Csv;
 import com.voidstore.api.common.Localized;
@@ -51,8 +52,10 @@ public class AdminWaitlistController {
 
 	private final WaitlistRepository repo;
 	private final SettingsService settings;
+	private final AuditLog audit;
 
-	public AdminWaitlistController(WaitlistRepository repo, SettingsService settings) {
+	public AdminWaitlistController(WaitlistRepository repo, SettingsService settings, AuditLog audit) {
+		this.audit = audit;
 		this.repo = repo;
 		this.settings = settings;
 	}
@@ -83,6 +86,7 @@ public class AdminWaitlistController {
 			values.put("closed_message_ar", m.ar());
 		}
 		settings.putAll(values);
+		audit.warn("admin.store.status", "closed", req.closed());
 		return storeStatus();
 	}
 
@@ -112,6 +116,7 @@ public class AdminWaitlistController {
 	@Transactional
 	public ResponseEntity<Void> delete(@PathVariable long id) {
 		repo.delete(repo.findById(id).orElseThrow(() -> ApiException.notFound("Entry")));
+		audit.info("admin.waitlist.deleted", "entry", id);
 		return ResponseEntity.noContent().build();
 	}
 
@@ -121,6 +126,8 @@ public class AdminWaitlistController {
 	public ResponseEntity<byte[]> export(@RequestParam(required = false) String status, @RequestParam(required = false) String q) {
 		var list = repo.search(contacted(status), blankToNull(q), PageRequest.of(0, 10_000, Sort.by(Sort.Direction.DESC, "id")));
 		var fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(AdminOrderController.CAIRO);
+		if (list.getNumberOfElements() >= AuditLog.LARGE_EXPORT_ROWS) audit.warn("export.waitlist.large", "rows", list.getNumberOfElements());
+		else audit.info("export.waitlist", "rows", list.getNumberOfElements());
 		var sb = new StringBuilder(Csv.BOM).append("Date,Name,Phone,Email,Notes,Language,Contacted\n");
 		for (var e : list) {
 			sb.append(String.join(",", csv(fmt.format(e.getCreatedAt())), csv(e.getName()), csv(e.getPhone()),

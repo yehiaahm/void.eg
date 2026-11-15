@@ -29,6 +29,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 	long countByStatus(Order.Status status);
 
+	/** Orders still waiting for a human to confirm them, per customer (PV-4). */
+	long countByPhoneAndStatus(String phone, Order.Status status);
+
+	long countByEmailAndStatus(String email, Order.Status status);
+
+	/** Unconfirmed orders older than the cutoff, oldest first (auto-cancel job). */
+	@Query("select o.id from Order o where o.status = com.voidstore.api.order.Order.Status.NEW and o.createdAt < :cutoff order by o.createdAt")
+	List<Long> findStaleNewIds(Instant cutoff, Pageable pageable);
+
 	@Query("select count(o) from Order o where o.user.id = :userId")
 	long countByUserId(Long userId);
 

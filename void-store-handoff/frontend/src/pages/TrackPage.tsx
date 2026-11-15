@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api, type Order } from '../api'
 import { Field } from '../components/Field'
@@ -8,6 +8,10 @@ import { useI18n } from '../i18n'
 import { errorMessage, isEgMobile } from '../lib/errors'
 import '../styles/forms.css'
 
+/**
+ * Guest order tracking. The private `t` token from the e-mailed link opens the full order and allows cancelling or
+ * returning; the order number + phone only opens a masked, read-only status view.
+ */
 export function TrackPage() {
   const { t } = useI18n()
   useDocumentTitle(`${t.trackOrder} — VOID`)
@@ -15,9 +19,28 @@ export function TrackPage() {
   const [number, setNumber] = useState(params.get('order') ?? '')
   const [phone, setPhone] = useState('')
   const [order, setOrder] = useState<Order | null>(null)
-  const [found, setFound] = useState<{ number: string; phone: string } | null>(null)
+  /** Present only when the order was opened with the private token. */
+  const [token, setToken] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const linkToken = params.get('t')
+  const auto = useRef(false)
+
+  // Arriving from the e-mail link: open the order straight away.
+  useEffect(() => {
+    const n = params.get('order')
+    if (auto.current || !n || !linkToken) return
+    auto.current = true
+    setBusy(true)
+    api
+      .track(n.trim(), { token: linkToken })
+      .then((o) => {
+        setOrder(o)
+        setToken(linkToken)
+      })
+      .catch((err) => setError(errorMessage(err, t)))
+      .finally(() => setBusy(false))
+  }, [params, linkToken, t])
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -26,8 +49,8 @@ export function TrackPage() {
     if (!isEgMobile(phone)) return setError(t.invalidPhone)
     setBusy(true)
     try {
-      setOrder(await api.track(number.trim(), phone))
-      setFound({ number: number.trim(), phone })
+      setOrder(await api.track(number.trim(), { phone }))
+      setToken(null)
     } catch (err) {
       setOrder(null)
       setError(errorMessage(err, t))
@@ -57,10 +80,15 @@ export function TrackPage() {
         </form>
         {order && (
           <div style={{ marginTop: 40 }} aria-live="polite">
+            {!token && (
+              <p className="s-note" role="note">
+                {t.trackLimitedHint}
+              </p>
+            )}
             <OrderView
               order={order}
-              onCancel={found ? async () => setOrder(await api.guestCancel(found.number, found.phone)) : undefined}
-              onReturn={found ? async (r) => setOrder(await api.guestReturn(found.number, found.phone, r)) : undefined}
+              onCancel={token ? async () => setOrder(await api.guestCancel(order.number, token)) : undefined}
+              onReturn={token ? async (r) => setOrder(await api.guestReturn(order.number, token, r)) : undefined}
             />
           </div>
         )}

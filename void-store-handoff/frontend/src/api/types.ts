@@ -153,6 +153,8 @@ export interface PlaceOrderResult {
   total: number
   paymentMethod: string
   redirectUrl: string | null
+  /** Private link secret for guests: shown once here and in the confirmation e-mail. */
+  trackingToken: string
 }
 
 export type OrderStatus = 'NEW' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'RETURNED'

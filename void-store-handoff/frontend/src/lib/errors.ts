@@ -23,6 +23,12 @@ export function errorMessage(e: unknown, t: Strings): string {
         return t.orderNotFound
       case 'store_closed':
         return t.storeClosedError
+      case 'too_many_open_orders':
+        return t.tooManyOpenOrders
+      case 'too_many_items':
+        return t.tooManyItems
+      case 'proof_required':
+        return t.proofRequired
     }
     if (e.code.startsWith('coupon_')) return t.couponError[e.code.slice(7)] ?? t.couponError.invalid
     return t.genericError

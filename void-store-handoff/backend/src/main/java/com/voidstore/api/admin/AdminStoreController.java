@@ -1,5 +1,6 @@
 package com.voidstore.api.admin;
 
+import com.voidstore.api.auth.AuditLog;
 import com.voidstore.api.auth.CurrentUser;
 import com.voidstore.api.auth.RefreshTokenRepository;
 import com.voidstore.api.common.ApiException;
@@ -15,6 +16,7 @@ import com.voidstore.api.user.AddressRepository;
 import com.voidstore.api.user.User;
 import com.voidstore.api.user.UserRepository;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -55,10 +57,14 @@ public class AdminStoreController {
 	private final PageRepository pages;
 	private final PasswordEncoder encoder;
 	private final RefreshTokenRepository refreshTokens;
+	private final AuditLog audit;
+	private final Validator validator;
 
 	public AdminStoreController(UserRepository users, AddressRepository addresses, OrderRepository orders,
 			CouponRepository coupons, ShippingZoneRepository zones, SettingsService settings, PageRepository pages,
-			PasswordEncoder encoder, RefreshTokenRepository refreshTokens) {
+			PasswordEncoder encoder, RefreshTokenRepository refreshTokens, AuditLog audit, Validator validator) {
+		this.audit = audit;
+		this.validator = validator;
 		this.users = users;
 		this.addresses = addresses;
 		this.orders = orders;
@@ -112,6 +118,7 @@ public class AdminStoreController {
 				.orElseThrow(() -> ApiException.notFound("Customer"));
 		u.setEnabled(value);
 		if (!value) refreshTokens.revokeAllForUser(id);
+		audit.info("customer.enabled_changed", "target", id, "enabled", value);
 		return ResponseEntity.noContent().build();
 	}
 
@@ -144,7 +151,9 @@ public class AdminStoreController {
 		if (coupons.existsByCode(Coupon.normalize(req.code()))) throw ApiException.conflict("code_taken", "This code already exists");
 		var c = new Coupon();
 		applyCoupon(c, req);
-		return CouponDto.of(coupons.save(c));
+		var saved = coupons.save(c);
+		audit.info("admin.coupon.created", "coupon", saved.getId(), "code", saved.getCode(), "type", saved.getType());
+		return CouponDto.of(saved);
 	}
 
 	@PutMapping("/coupons/{id}")
@@ -156,6 +165,7 @@ public class AdminStoreController {
 			throw ApiException.conflict("code_taken", "This code already exists");
 		}
 		applyCoupon(c, req);
+		audit.info("admin.coupon.updated", "coupon", id, "code", c.getCode(), "type", c.getType(), "active", c.isActive());
 		return CouponDto.of(c);
 	}
 
@@ -166,6 +176,7 @@ public class AdminStoreController {
 		var c = coupons.findById(id).orElseThrow(() -> ApiException.notFound("Coupon"));
 		if (c.getUsedCount() > 0) c.setActive(false); // keep history of used codes
 		else coupons.delete(c);
+		audit.info("admin.coupon.deleted", "coupon", id, "code", c.getCode());
 		return ResponseEntity.noContent().build();
 	}
 
@@ -198,6 +209,8 @@ public class AdminStoreController {
 
 	public record ZoneDto(long id, String code, Localized name, Integer fee, String etaDays, boolean enabled) {}
 
+	static final int MAX_ZONES = 40;
+
 	public record ZoneReq(@NotNull Long id, @Min(0) @Max(10_000_00) Integer fee, @Size(max = 16) String etaDays, boolean enabled) {}
 
 	@GetMapping("/shipping-zones")
@@ -211,7 +224,16 @@ public class AdminStoreController {
 	@PutMapping("/shipping-zones")
 	@PreAuthorize(Roles.ADMIN)
 	@Transactional
-	public List<ZoneDto> saveZones(@RequestBody List<@Valid ZoneReq> reqs) {
+	public List<ZoneDto> saveZones(@RequestBody List<ZoneReq> reqs) {
+		// PV-5: validate every element explicitly; bean-validation of a List<@Valid …> body is not applied automatically
+		if (reqs == null || reqs.isEmpty() || reqs.size() > MAX_ZONES) {
+			throw ApiException.badRequest("validation", "Send between 1 and " + MAX_ZONES + " shipping zones");
+		}
+		for (var r : reqs) {
+			if (r == null || !validator.validate(r).isEmpty()) {
+				throw ApiException.badRequest("validation", "Invalid shipping zone (fee 0 – 10,000.00 EGP, ETA up to 16 characters)");
+			}
+		}
 		for (var r : reqs) {
 			var z = zones.findById(r.id()).orElseThrow(() -> ApiException.notFound("Zone"));
 			if (r.enabled() && r.fee() == null) {
@@ -221,6 +243,7 @@ public class AdminStoreController {
 			z.setEtaDays(r.etaDays());
 			z.setEnabled(r.enabled());
 		}
+		audit.info("admin.shipping.updated", "zones", reqs.size());
 		return zones();
 	}
 
@@ -241,6 +264,7 @@ public class AdminStoreController {
 			}
 		});
 		settings.putAll(values);
+		audit.info("admin.settings.updated", "keys", String.join(",", new java.util.TreeSet<>(values.keySet())));
 		return settings.all();
 	}
 
@@ -265,6 +289,7 @@ public class AdminStoreController {
 		p.setTitleAr(req.title().ar());
 		p.setBodyEn(req.body().en() == null ? "" : req.body().en());
 		p.setBodyAr(req.body().ar() == null ? "" : req.body().ar());
+		audit.info("admin.page.updated", "page", slug);
 		return new PageDto(p.getSlug(), req.title(), req.body(), Instant.now());
 	}
 
@@ -305,7 +330,9 @@ public class AdminStoreController {
 		u.setRole(role);
 		u.setEnabled(true);
 		u.setPasswordHash(encoder.encode(req.password()));
-		return StaffDto.of(users.save(u));
+		var saved = users.save(u);
+		audit.warn("staff.created", "target", saved.getId(), "role", role, "promotedExistingCustomer", existing != null);
+		return StaffDto.of(saved);
 	}
 
 	@PutMapping("/staff/{id}")
@@ -325,6 +352,8 @@ public class AdminStoreController {
 		u.setEnabled(req.enabled());
 		if (req.password() != null && !req.password().isBlank()) u.setPasswordHash(encoder.encode(req.password()));
 		refreshTokens.revokeAllForUser(u.getId()); // role changes take effect on next sign-in
+		audit.warn("staff.updated", "target", id, "role", u.getRole(), "enabled", u.isEnabled(),
+				"passwordChanged", req.password() != null && !req.password().isBlank());
 		return StaffDto.of(u);
 	}
 

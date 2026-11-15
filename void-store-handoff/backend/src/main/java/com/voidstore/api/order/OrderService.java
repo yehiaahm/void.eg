@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
 	public static final int MAX_QTY_PER_LINE = 10;
+	/** Pieces in one order (PV-4): a limited drop cannot be reserved in bulk by one checkout. */
+	public static final int MAX_PIECES_PER_ORDER = 10;
 
 	private final ProductRepository products;
 	private final ShippingZoneRepository zones;
@@ -48,10 +51,17 @@ public class OrderService {
 	private final PaymentService payments;
 	private final ApplicationEventPublisher events;
 	private final EntityManager em;
+	private final OrderLocks locks;
+	private final TrackingTokens tokens;
+	private final int maxOpenPerCustomer;
 
 	public OrderService(ProductRepository products, ShippingZoneRepository zones,
 			CouponRepository coupons, CouponRedemptionRepository redemptions, OrderRepository orders, UserRepository users,
-			AddressRepository addresses, PaymentService payments, ApplicationEventPublisher events, EntityManager em) {
+			AddressRepository addresses, PaymentService payments, ApplicationEventPublisher events, EntityManager em,
+			OrderLocks locks, TrackingTokens tokens, @Value("${void.orders.max-open-per-customer:2}") int maxOpenPerCustomer) {
+		this.locks = locks;
+		this.tokens = tokens;
+		this.maxOpenPerCustomer = maxOpenPerCustomer;
 		this.products = products;
 		this.zones = zones;
 		this.coupons = coupons;
@@ -65,7 +75,8 @@ public class OrderService {
 	}
 
 	/** Published after commit → emails. */
-	public record OrderPlaced(long orderId) {}
+	/** {@code trackingToken} goes only into the confirmation e-mail link; it is never stored. */
+	public record OrderPlaced(long orderId, String trackingToken) {}
 
 	public record StatusChanged(long orderId, Order.Status to) {}
 
@@ -104,18 +115,35 @@ public class OrderService {
 
 	private record CouponCheck(Coupon coupon, String error) {}
 
-	private CouponCheck checkCoupon(Coupon c, int subtotal, String email) {
-		if (c == null || !c.isActive()) return new CouponCheck(null, "invalid");
+	/** Who is asking, for the per-customer coupon limit. Every field is optional. */
+	record Who(String email, String phone, String addressKey, Long userId) {
+		static final Who NONE = new Who(null, null, null, null);
+	}
+
+	/**
+	 * VOID-03: every reason a code cannot be used is reported as the same generic "invalid", so the response never
+	 * tells whether a code exists, is expired, used up or below its minimum.
+	 */
+	private CouponCheck checkCoupon(Coupon c, int subtotal, Who who) {
+		final CouponCheck invalid = new CouponCheck(null, "invalid");
+		if (c == null || !c.isActive()) return invalid;
 		var now = Instant.now();
-		if (c.getStartsAt() != null && now.isBefore(c.getStartsAt())) return new CouponCheck(null, "not_started");
-		if (c.getEndsAt() != null && now.isAfter(c.getEndsAt())) return new CouponCheck(null, "expired");
-		if (c.getMaxUses() != null && c.getUsedCount() >= c.getMaxUses()) return new CouponCheck(null, "used_up");
-		if (subtotal < c.getMinSubtotal()) return new CouponCheck(null, "min_subtotal");
-		if (c.getPerCustomer() != null && email != null && !email.isBlank()
-				&& redemptions.countByCouponIdAndEmail(c.getId(), User.normalizeEmail(email)) >= c.getPerCustomer()) {
-			return new CouponCheck(null, "already_used");
-		}
+		if (c.getStartsAt() != null && now.isBefore(c.getStartsAt())) return invalid;
+		if (c.getEndsAt() != null && now.isAfter(c.getEndsAt())) return invalid;
+		if (c.getMaxUses() != null && c.getUsedCount() >= c.getMaxUses()) return invalid;
+		if (subtotal < c.getMinSubtotal()) return invalid;
+		if (c.getPerCustomer() != null && alreadyRedeemed(c, who) >= c.getPerCustomer()) return invalid;
 		return new CouponCheck(c, null);
+	}
+
+	/** VOID-05: same account, phone, delivery address or (canonical) e-mail all count as the same customer. */
+	private long alreadyRedeemed(Coupon c, Who who) {
+		String email = who.email() == null || who.email().isBlank() ? null : User.normalizeEmail(who.email());
+		String phone = who.phone() == null || who.phone().isBlank() ? null : Phones.normalize(who.phone());
+		if (phone != null && phone.isEmpty()) phone = null;
+		if (email == null && phone == null && who.addressKey() == null && who.userId() == null) return 0;
+		return redemptions.countForCustomer(c.getId(), CustomerIdentity.canonicalEmail(email), email, phone, who.addressKey(),
+				who.userId());
 	}
 
 	@Transactional(readOnly = true)
@@ -137,7 +165,7 @@ public class OrderService {
 
 		String code = Coupon.normalize(req.couponCode());
 		CouponCheck cc = code == null || code.isBlank() ? new CouponCheck(null, null)
-				: checkCoupon(coupons.findByCode(code).orElse(null), subtotal, req.email());
+				: checkCoupon(coupons.findByCode(code).orElse(null), subtotal, new Who(req.email(), req.phone(), null, null));
 
 		Integer shipping = null;
 		if (req.governorate() != null && !req.governorate().isBlank()) {
@@ -153,8 +181,13 @@ public class OrderService {
 
 	// ------------------------------------------------------------------ place
 
-	@Transactional
 	public PlaceRes place(PlaceReq req, Long userId) {
+		return place(req, userId, false);
+	}
+
+	/** {@code staff}: staff test-orders are exempt from the open-order cap. */
+	@Transactional
+	public PlaceRes place(PlaceReq req, Long userId, boolean staff) {
 		String phone = Phones.requireValid(req.contact().phone());
 		String email = User.normalizeEmail(req.contact().email());
 		Order.PaymentMethod method;
@@ -170,6 +203,16 @@ public class OrderService {
 
 		// Resolve, then lock the variant rows (ordered by id → no deadlocks) and re-check stock under the lock.
 		var resolved = resolve(req.items());
+
+		// PV-4: unconfirmed cash-on-delivery orders reserve stock, so one buyer cannot hold a limited drop hostage.
+		if (resolved.stream().mapToInt(Resolved::qty).sum() > MAX_PIECES_PER_ORDER) {
+			throw ApiException.badRequest("too_many_items", "An order can contain at most " + MAX_PIECES_PER_ORDER + " pieces");
+		}
+		if (!staff && (orders.countByPhoneAndStatus(phone, Order.Status.NEW) >= maxOpenPerCustomer
+				|| orders.countByEmailAndStatus(email, Order.Status.NEW) >= maxOpenPerCustomer)) {
+			throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "too_many_open_orders",
+					"You already have orders waiting for confirmation");
+		}
 		var locked = lock(resolved.stream().map(Resolved::variant).filter(Objects::nonNull).toList());
 
 		List<Map<String, Object>> problems = new ArrayList<>();
@@ -186,18 +229,21 @@ public class OrderService {
 		}
 		if (!problems.isEmpty()) throw new StockProblem(problems);
 
+		User user = userId == null ? null : users.findById(userId).orElse(null);
+		String addressKey = CustomerIdentity.addressKey(zone.getCode(), req.address().city(), req.address().street(),
+				req.address().building());
+
 		Coupon coupon = null;
 		String code = Coupon.normalize(req.couponCode());
 		if (code != null && !code.isBlank()) {
-			var cc = checkCoupon(coupons.lockByCode(code).orElse(null), subtotal, email);
+			var cc = checkCoupon(coupons.lockByCode(code).orElse(null), subtotal,
+					new Who(email, phone, addressKey, user == null ? null : user.getId()));
 			if (cc.error() != null) throw ApiException.badRequest("coupon_" + cc.error(), "This code can't be used");
 			coupon = cc.coupon();
 		}
 
 		int discount = coupon == null ? 0 : coupon.discountFor(subtotal);
 		int shipping = coupon != null && coupon.getType() == Coupon.Type.FREE_SHIPPING ? 0 : zone.getFee();
-
-		User user = userId == null ? null : users.findById(userId).orElse(null);
 
 		var o = new Order();
 		o.setNumber("TMP-" + UUID.randomUUID().toString().substring(0, 12));
@@ -230,14 +276,16 @@ public class OrderService {
 
 		if (coupon != null) {
 			coupon.incrementUsed();
-			redemptions.save(new CouponRedemption(coupon, o, email));
+			redemptions.save(new CouponRedemption(coupon, o, CustomerIdentity.canonicalEmail(email), phone,
+					user == null ? null : user.getId(), addressKey));
 		}
 
 		if (user != null && Boolean.TRUE.equals(req.saveAddress())) saveAddress(user, req, phone, zone.getCode());
 
 		var start = provider.start(o);
-		events.publishEvent(new OrderPlaced(o.getId()));
-		return new PlaceRes(o.getNumber(), o.getTotal(), method.name(), start.redirectUrl());
+		String trackingToken = tokens.forOrder(o.getNumber());
+		events.publishEvent(new OrderPlaced(o.getId(), trackingToken));
+		return new PlaceRes(o.getNumber(), o.getTotal(), method.name(), start.redirectUrl(), trackingToken);
 	}
 
 	private void saveAddress(User user, PlaceReq req, String phone, String governorate) {
@@ -275,6 +323,8 @@ public class OrderService {
 
 	@Transactional
 	public Order changeStatus(Order o, Order.Status to, String note, User actor) {
+		// PV-1: lock + reload first, so a concurrent cancel/return of the same order is applied exactly once
+		locks.lock(o);
 		var from = o.getStatus();
 		if (from == to) return o;
 		if (!from.canMoveTo(to)) {
@@ -326,10 +376,27 @@ public class OrderService {
 	public Order cancelByCustomer(String number, long userId) {
 		var o = orders.findByNumber(number).filter(x -> x.getUser() != null && x.getUser().getId() == userId)
 				.orElseThrow(() -> ApiException.notFound("Order"));
+		locks.lock(o);
 		if (o.getStatus() != Order.Status.NEW) {
 			throw ApiException.badRequest("cannot_cancel", "This order is already being prepared");
 		}
 		return changeStatus(o, Order.Status.CANCELLED, "Cancelled by customer", o.getUser());
+	}
+
+	/**
+	 * PV-4: cancels an order nobody confirmed within {@code hours} (stock goes back on the shelf).
+	 * Re-checks under the row lock, so an order staff confirmed a moment ago is left alone.
+	 */
+	@Transactional
+	public boolean autoCancel(long orderId, int hours) {
+		var o = orders.findById(orderId).orElse(null);
+		if (o == null) return false;
+		locks.lock(o);
+		if (o.getStatus() != Order.Status.NEW || o.getCreatedAt().isAfter(Instant.now().minus(java.time.Duration.ofHours(hours)))) {
+			return false;
+		}
+		changeStatus(o, Order.Status.CANCELLED, "Auto-cancelled: not confirmed within " + hours + " hours", null);
+		return true;
 	}
 
 	/** Entry point for online payment webhooks (Paymob). */

@@ -18,7 +18,7 @@ function SettingsCard() {
   }, [data])
   const save = useMutation({
     mutationFn: () => {
-      const keys = ['shipping_returns_en', 'shipping_returns_ar', 'instagram_url', 'tiktok_url', 'contact_email', 'contact_phone', 'cod_enabled', 'low_stock_threshold', 'return_window_days']
+      const keys = ['shipping_returns_en', 'shipping_returns_ar', 'instagram_url', 'tiktok_url', 'contact_email', 'contact_phone', 'cod_enabled', 'low_stock_threshold', 'return_window_days', 'unconfirmed_order_hours']
       return adminApi.saveSettings(Object.fromEntries(keys.map((k) => [k, s[k] ?? ''])))
     },
     onSuccess: (v) => {
@@ -51,6 +51,7 @@ function SettingsCard() {
       <div className="a-pair">
         <Field label={t.lowStockThreshold} type="number" min={0} value={v('low_stock_threshold')} onChange={set('low_stock_threshold')} />
         <Field label={t.returnWindow} type="number" min={0} max={365} value={v('return_window_days')} onChange={set('return_window_days')} />
+        <Field label={t.unconfirmedHours} type="number" min={0} max={720} value={v('unconfirmed_order_hours')} onChange={set('unconfirmed_order_hours')} />
         <label className="a-switch" style={{ alignSelf: 'end', height: 38 }}>
           <input type="checkbox" checked={v('cod_enabled') !== 'false'} onChange={(e) => setS((x) => ({ ...x, cod_enabled: String(e.target.checked) }))} />
           {t.codEnabled}

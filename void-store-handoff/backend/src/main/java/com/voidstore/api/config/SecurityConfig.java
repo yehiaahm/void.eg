@@ -6,8 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -35,9 +33,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-
-	private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
-	private static final String DEV_SECRET_MARKER = "dev-only";
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -79,13 +74,9 @@ public class SecurityConfig {
 
 	@Bean
 	SecretKey jwtKey(AppProperties props) {
+		// Fails startup (never logs the value) when the secret is missing, short, a known placeholder or low-entropy.
 		String secret = props.jwt().secret();
-		if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
-			throw new IllegalStateException("void.jwt.secret (JWT_SECRET) must be at least 32 bytes");
-		}
-		if (secret.contains(DEV_SECRET_MARKER)) {
-			log.warn("Using the development JWT secret — set JWT_SECRET in production!");
-		}
+		JwtSecretPolicy.validate(secret);
 		return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
 	}
 

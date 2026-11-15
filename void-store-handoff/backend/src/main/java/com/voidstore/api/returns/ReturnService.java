@@ -6,6 +6,7 @@ import com.voidstore.api.content.SettingsService;
 import com.voidstore.api.order.Order;
 import com.voidstore.api.order.OrderEvent;
 import com.voidstore.api.order.OrderItem;
+import com.voidstore.api.order.OrderLocks;
 import com.voidstore.api.returns.ReturnDtos.ItemReq;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
@@ -35,8 +36,11 @@ public class ReturnService {
 	private final SettingsService settings;
 	private final EntityManager em;
 	private final ApplicationEventPublisher events;
+	private final OrderLocks locks;
 
-	public ReturnService(ReturnRepository returns, SettingsService settings, EntityManager em, ApplicationEventPublisher events) {
+	public ReturnService(ReturnRepository returns, SettingsService settings, EntityManager em, ApplicationEventPublisher events,
+			OrderLocks locks) {
+		this.locks = locks;
 		this.returns = returns;
 		this.settings = settings;
 		this.em = em;
@@ -81,6 +85,7 @@ public class ReturnService {
 
 	@Transactional
 	public ReturnRequest create(Order o, String type, String reason, String note, List<ItemReq> items, String actorName) {
+		locks.lock(o); // PV-1: serialise with cancels / other returns of the same order (stale returnedQty)
 		var until = returnUntil(o).orElseThrow(() -> ApiException.badRequest("not_returnable",
 				"Returns and exchanges are available once the order is delivered"));
 		if (Instant.now().isAfter(until)) throw ApiException.badRequest("return_window_over", "The return window for this order has ended");
@@ -128,6 +133,8 @@ public class ReturnService {
 
 	@Transactional
 	public ReturnRequest changeStatus(ReturnRequest r, ReturnRequest.Status to, String note, Integer refundAmount, String actorName) {
+		locks.lock(r.getOrder()); // PV-1: restock must see the committed returnedQty of concurrent cancels
+		em.refresh(r, LockModeType.PESSIMISTIC_WRITE); // and two staff approving the same request must not reserve stock twice
 		var from = r.getStatus();
 		if (from == to) return r;
 		if (!from.canMoveTo(to)) throw ApiException.badRequest("invalid_transition", "Can't move a request from " + from + " to " + to);

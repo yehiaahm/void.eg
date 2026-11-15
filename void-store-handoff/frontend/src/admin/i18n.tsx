@@ -274,6 +274,7 @@ const en = {
   newReturns: (n: number) => `${n} return / exchange request${n === 1 ? '' : 's'} to review`,
   searchReturns: 'Request, order, name or phone',
   returnWindow: 'Return / exchange window (days after delivery, 0 = off)',
+  unconfirmedHours: 'Cancel orders nobody confirmed after (hours, 0 = never) — frees the stock',
   saves: 'Saved',
 
   // store open / closed + waitlist
@@ -576,6 +577,7 @@ const ar: Dict = {
   newReturns: (n) => `${n} طلب استرجاع / استبدال محتاج مراجعة`,
   searchReturns: 'رقم الطلب، الاسم أو الموبايل',
   returnWindow: 'مدة الاسترجاع والاستبدال (أيام بعد التوصيل، 0 = متوقف)',
+  unconfirmedHours: 'إلغاء الطلبات اللي محدش أكدها بعد (ساعات، 0 = أبدًا) — بيرجّع المخزون',
   saves: 'مفضّل',
 
   storeOpen: 'المتجر مفتوح',

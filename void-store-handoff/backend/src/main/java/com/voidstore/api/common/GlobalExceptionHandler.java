@@ -21,6 +21,12 @@ public class GlobalExceptionHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+	private final com.voidstore.api.auth.AuditLog audit;
+
+	public GlobalExceptionHandler(com.voidstore.api.auth.AuditLog audit) {
+		this.audit = audit;
+	}
+
 	public record ErrorBody(String code, String message, Map<String, String> fields) {}
 
 	@ExceptionHandler(com.voidstore.api.order.OrderService.StockProblem.class)
@@ -60,6 +66,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(AccessDeniedException.class)
 	ResponseEntity<ErrorBody> denied(AccessDeniedException e) {
+		audit.warn("authz.denied");
 		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorBody("forbidden", "Not allowed", null));
 	}
 
