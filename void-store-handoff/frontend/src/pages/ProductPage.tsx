@@ -80,6 +80,10 @@ function ProductView({ product }: { product: Product }) {
   const variant = product.variants.find((v) => v.size === size)
   const soldOut = product.variants.every((v) => v.stock <= 0)
   const maxQty = Math.max(1, Math.min(MAX_QTY, variant?.stock ?? MAX_QTY))
+  // Models wearing the size the shopper picked (shown under the size buttons).
+  // Models are anonymous: "Model 1 / 2 / 3" in the order they are stored.
+  const fitModels = (product.fitModels ?? []).map((m, i) => ({ ...m, n: i + 1 }))
+  const wornBy = size ? fitModels.filter((m) => m.size === size) : []
   const price = formatPrice(product.price, lang)
   const more = all.filter((p) => p.slug !== product.slug && p.dropId === product.dropId)
 
@@ -136,15 +140,6 @@ function ProductView({ product }: { product: Product }) {
       {soldOut ? t.soldOut : t.addToBag}
     </button>
   )
-
-  const specs: [string, string][] = [
-    [t.spec.fit, l(product.details.fit)],
-    [t.spec.fabric, l(product.details.fabric)],
-    [t.spec.weight, l(product.details.weight)],
-    [t.spec.colour, l(product.details.colour)],
-    [t.spec.care, l(product.details.care)],
-    [t.spec.sku, variant?.sku ?? product.variants.find((v) => v.sku)?.sku ?? t.skuPh],
-  ]
 
   return (
     <main className="s-main s-pdpin">
@@ -225,6 +220,24 @@ function ProductView({ product }: { product: Product }) {
                 {t.pickHint}
               </p>
             )}
+            {wornBy.length > 0 && (
+              <p className="s-wornby" aria-live="polite">
+                <span className="s-lab">{t.wornInSize(size as Size)}</span>
+                <span className="s-wornlist">
+                  {wornBy.map((m) => (
+                    <span key={m.n} className="s-wornitem">
+                      <bdi>{t.modelN(m.n)}</bdi>
+                      <span className="s-wornsep" aria-hidden="true">
+                        ·
+                      </span>
+                      <bdi>
+                        {m.heightCm} {t.cm}
+                      </bdi>
+                    </span>
+                  ))}
+                </span>
+              </p>
+            )}
           </div>
 
           <div className="s-row s-center">
@@ -244,22 +257,42 @@ function ProductView({ product }: { product: Product }) {
           <p className="s-desc">{l(product.description)}</p>
 
           <div>
-            <details className="s-det">
-              <summary>{t.details}</summary>
-              <div>
-                <dl className="s-specs">
-                  {specs.map(([k, v]) => (
-                    <div key={k} style={{ display: 'contents' }}>
-                      <dt>{k}</dt>
-                      <dd>{v}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            </details>
             <details className="s-det" ref={sizeFitRef}>
               <summary>{t.sizeFit}</summary>
-              <div className="s-pre">{l(product.sizeFit)}</div>
+              <div>
+                <p className="s-pre s-fitnote">{l(product.sizeFit)}</p>
+                {fitModels.length > 0 && (
+                  <table className="s-models">
+                    <caption className="s-lab">{t.onModels}</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">{t.modelCol}</th>
+                        <th scope="col">{t.heightCol}</th>
+                        <th scope="col">{t.wearsCol}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {fitModels.map((m) => (
+                        <tr key={m.n} data-active={size === m.size || undefined}>
+                          <th scope="row">
+                            <bdi>{t.modelN(m.n)}</bdi>
+                          </th>
+                          <td>
+                            <bdi>
+                              {m.heightCm} {t.cm}
+                            </bdi>
+                          </td>
+                          <td>
+                            <span className="s-modelsize" dir="ltr">
+                              {m.size}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </details>
             <details className="s-det">
               <summary>{t.shippingReturns}</summary>

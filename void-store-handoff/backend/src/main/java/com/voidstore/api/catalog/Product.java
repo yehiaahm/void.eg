@@ -80,6 +80,12 @@ public class Product {
 	@BatchSize(size = 50)
 	private List<ProductImage> images = new ArrayList<>();
 
+	/** Models shown on the product page (read-only here; rows are added by Flyway migrations). */
+	@OneToMany(mappedBy = "product")
+	@OrderBy("position ASC")
+	@BatchSize(size = 50)
+	private List<ProductFitModel> fitModels = new ArrayList<>();
+
 	public boolean isPurchasable() {
 		return status == Status.ACTIVE && price != null;
 	}
@@ -136,4 +142,5 @@ public class Product {
 	public Instant getCreatedAt() { return createdAt; }
 	public List<ProductVariant> getVariants() { return variants; }
 	public List<ProductImage> getImages() { return images; }
+	public List<ProductFitModel> getFitModels() { return fitModels; }
 }
