@@ -1,6 +1,12 @@
 # Deploying VOID
 
-The production stack is three containers on one server: **Caddy** (HTTPS) → **app** (Spring Boot serving the API, the storefront and the admin) → **MySQL**. Product photos live in a Docker volume.
+The production stack is three containers on one server: **Caddy** (HTTPS) → **app** (Spring Boot serving the API, the storefront and the admin) → **MySQL**. Product photos live in a Docker volume. The live store runs on Railway instead — see [Railway](#railway) below.
+
+### Where uploaded photos are stored
+
+Photos uploaded in Admin → Products are written to `UPLOADS_DIR` (in the Docker image: `/data/uploads`, files under `products/`) and served at `/uploads/products/<hash>.<ext>`. A container's own disk is **wiped on every deploy**, so `UPLOADS_DIR` must be persistent storage: a Docker volume (`docker-compose.prod.yml` mounts `uploads` there) or a Railway volume. Without one, every uploaded photo returns 404 after the next deploy. Photos that ship with the code (`frontend/public/assets/products`, URLs starting `/assets/`) are not affected.
+
+On start-up the app logs either `Product uploads are stored in /data/uploads` or a `WARN` saying the directory is not writable or, on Railway, that no volume is mounted there. The image starts as root only to give the volume to the app user (`deploy/docker-entrypoint.sh`), then runs the app as the unprivileged `void` user.
 
 ## 1. Server
 
@@ -63,6 +69,21 @@ Copy the backups off the server (for example to object storage). Check the volum
 - Submit `https://your-domain/sitemap.xml` in Google Search Console.
 - Link previews on Instagram, WhatsApp and Facebook use each product's front photo, name and description — upload photos before sharing links.
 - Health check: `https://your-domain/actuator/health`.
+
+## Railway
+
+The live store (voideg.app) is the `Dockerfile` deployed by Railway from `main`, with Railway's MySQL (the `MYSQL*` variables are picked up automatically). Pushing to `main` redeploys it.
+
+**Product photos need a volume.** Railway gives each deploy a fresh disk, so without a volume every photo uploaded in the admin disappears on the next deploy. One-time setup in the Railway dashboard:
+
+1. Open the project and select the **app service** (the one built from this repo — not MySQL).
+2. Add a volume to it: right-click the service (or use the **⌘K / Ctrl+K** command palette → *Create volume*) → **Attach volume** / **New volume**, and pick the app service.
+3. Set the **mount path** to exactly `/data/uploads`.
+4. In the service's **Variables**, check that `UPLOADS_DIR` is either not set or set to `/data/uploads`. If it is set to anything else, the mount path must be that value instead.
+5. Railway redeploys the service. In the new deploy's logs, look for `Product uploads are stored in /data/uploads`. If you see `No Railway volume is mounted at …`, the mount path does not match.
+6. Upload the missing photos again in Admin → Products. Photos uploaded before the volume existed are gone and cannot be recovered.
+
+Notes: a service with a volume restarts with a few seconds of downtime on each deploy (Railway cannot overlap two copies that share a volume), and it cannot run more than one replica. Turn on volume backups in the volume's settings, or copy the photos off regularly. If photos ever need to live outside one server (several replicas, a CDN), replace `ImageStorage` with an S3 / Cloudflare R2 implementation.
 
 ## Adding Paymob later
 
