@@ -48,7 +48,7 @@ public class SecurityConfig {
 						.requestMatchers("/actuator/health", "/uploads/**", "/error").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/settings", "/api/v1/pages/**",
 								"/api/v1/shipping-zones", "/api/v1/sitemap.xml").permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/v1/orders", "/api/v1/orders/track", "/api/v1/orders/quote",
+						.requestMatchers(HttpMethod.POST, "/api/v1/orders", "/api/v1/orders/track", "/api/v1/orders/track-batch", "/api/v1/orders/quote",
 								"/api/v1/orders/cancel", "/api/v1/orders/returns", "/api/v1/waitlist", "/api/v1/contact").permitAll()
 						.requestMatchers("/api/v1/auth/**").permitAll()
 						.requestMatchers("/api/v1/admin/**").hasAnyRole("STAFF", "ADMIN", "OWNER")

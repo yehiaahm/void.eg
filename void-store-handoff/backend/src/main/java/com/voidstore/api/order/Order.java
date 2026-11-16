@@ -78,6 +78,8 @@ public class Order {
 	@Column(nullable = false) private String building = "";
 	@Column(name = "address_notes", nullable = false) private String addressNotes = "";
 	@Column(name = "customer_note", nullable = false) private String customerNote = "";
+	/** The customer ticked "send me order updates on WhatsApp" at checkout. */
+	@Column(name = "whatsapp_optin", nullable = false) private boolean whatsappOptIn;
 
 	@Column(nullable = false) private int subtotal;
 	@Column(nullable = false) private int discount;
@@ -125,6 +127,8 @@ public class Order {
 	public Long getId() { return id; }
 	public String getNumber() { return number; }
 	public void setNumber(String number) { this.number = number; }
+	public boolean isWhatsappOptIn() { return whatsappOptIn; }
+	public void setWhatsappOptIn(boolean whatsappOptIn) { this.whatsappOptIn = whatsappOptIn; }
 	public User getUser() { return user; }
 	public void setUser(User user) { this.user = user; }
 	public String getLang() { return lang; }

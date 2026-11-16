@@ -42,13 +42,20 @@ public final class OrderDtos {
 			@Size(max = 40) String couponCode,
 			@NotBlank @Size(max = 16) String paymentMethod,
 			@Size(max = 5) String lang,
-			Boolean saveAddress) {}
+			Boolean saveAddress,
+			Boolean whatsappOptIn) {}
 
 	/**
 	 * Guest proof of ownership. {@code token} (from the e-mailed link) gives the full order and the right to cancel or
 	 * return; {@code phone} alone only gives a masked, read-only status view.
 	 */
 	public record TrackReq(@NotBlank @Size(max = 20) String number, @Size(max = 32) String phone, @Size(max = 128) String token) {}
+
+	/** One order a device remembers: the number and its private tracking token (never the phone). */
+	public record BatchEntry(@NotBlank @Size(max = 20) String number, @NotBlank @Size(max = 128) String token) {}
+
+	/** The orders a device remembers, checked in one call (home strip, "my orders"). */
+	public record TrackBatchReq(@NotEmpty @Size(max = 10) List<@Valid BatchEntry> orders) {}
 
 	// ---- responses ----
 

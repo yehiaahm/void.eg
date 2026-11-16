@@ -122,7 +122,7 @@ class OrderServiceTest {
 
 	private static PlaceReq placeReq(String coupon, LineReq... lines) {
 		return new PlaceReq(List.of(lines), new ContactReq("Buyer+x@Example.com", "Buyer", "+20 100 123 4567"),
-				new AddressReq("cairo", "Nasr City", "1 Test St", "B2", null), null, coupon, "COD", "en", false);
+				new AddressReq("cairo", "Nasr City", "1 Test St", "B2", null), null, coupon, "COD", "en", false, null);
 	}
 
 	private static Order orderWith(Order.Status status, long id) {

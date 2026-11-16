@@ -79,6 +79,8 @@ export interface StoreSettings {
   storeClosed: boolean
   /** Optional owner message for the closed page (empty = default copy). */
   closedMessage: Localized
+  /** WhatsApp order updates are switched on and configured: checkout offers the opt-in box. */
+  whatsappUpdates: boolean
 }
 
 export interface WaitlistInput {
@@ -154,6 +156,8 @@ export interface PlaceOrderInput {
   paymentMethod: 'COD'
   lang: Lang
   saveAddress?: boolean
+  /** The shopper ticked "send me order updates on WhatsApp" (only offered when the store has it switched on). */
+  whatsappOptIn?: boolean
 }
 
 export interface PlaceOrderResult {

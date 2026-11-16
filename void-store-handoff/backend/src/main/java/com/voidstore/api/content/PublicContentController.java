@@ -6,6 +6,7 @@ import com.voidstore.api.catalog.Drop;
 import com.voidstore.api.catalog.DropRepository;
 import com.voidstore.api.common.ApiException;
 import com.voidstore.api.common.Localized;
+import com.voidstore.api.whatsapp.WhatsAppService;
 import com.voidstore.api.shipping.ShippingZone;
 import com.voidstore.api.shipping.ShippingZoneRepository;
 import java.time.Duration;
@@ -27,7 +28,7 @@ public class PublicContentController {
 
 	public record StoreSettingsDto(DropDto currentDrop, DropDto nextDrop, Localized shippingReturns,
 			String instagramUrl, String tiktokUrl, String contactEmail, String contactPhone, boolean codEnabled, int returnWindowDays,
-			boolean storeClosed, Localized closedMessage) {}
+			boolean storeClosed, Localized closedMessage, boolean whatsappUpdates) {}
 
 	public record PageDto(String slug, Localized title, Localized body, Instant updatedAt) {}
 
@@ -37,9 +38,11 @@ public class PublicContentController {
 	private final DropRepository drops;
 	private final PageRepository pages;
 	private final ShippingZoneRepository zones;
+	private final WhatsAppService whatsapp;
 
 	public PublicContentController(SettingsService settings, DropRepository drops, PageRepository pages,
-			ShippingZoneRepository zones) {
+			ShippingZoneRepository zones, WhatsAppService whatsapp) {
+		this.whatsapp = whatsapp;
 		this.settings = settings;
 		this.drops = drops;
 		this.pages = pages;
@@ -62,7 +65,8 @@ public class PublicContentController {
 				Boolean.parseBoolean(s.getOrDefault("cod_enabled", "true")),
 				settings.integer("return_window_days", 7),
 				Boolean.parseBoolean(s.getOrDefault("store_closed", "false")),
-				Localized.of(s.get("closed_message_en"), s.get("closed_message_ar")));
+				Localized.of(s.get("closed_message_en"), s.get("closed_message_ar")),
+				whatsapp.isActive());
 		return ResponseEntity.ok().cacheControl(CACHE).body(body);
 	}
 

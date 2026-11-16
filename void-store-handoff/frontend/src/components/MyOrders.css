@@ -1,0 +1,129 @@
+/* Order progress: four hairline segments. */
+.s-prog {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: middle;
+}
+.s-prog i {
+  width: 18px;
+  height: 3px;
+  background: var(--line-3);
+}
+.s-prog i[data-done='true'] {
+  background: var(--text);
+}
+
+/* Dot beside "My orders" while an order is on its way. */
+.s-navdot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-start: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  vertical-align: middle;
+}
+
+/* Home: the order in progress, under the announcement bar. */
+.s-ostrip {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  background: rgba(242, 240, 235, 0.05);
+}
+.s-ostrip-main {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px var(--pad);
+  color: var(--text);
+  font-size: 13px;
+}
+.s-ostrip-lab {
+  color: var(--muted);
+}
+.s-ostrip-no {
+  font-size: 12px;
+}
+.s-ostrip-st {
+  color: var(--text);
+}
+.s-ostrip-go {
+  margin-inline-start: auto;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.s-ostrip-x {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin-inline-end: calc(var(--pad) - 14px);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .s-ostrip-x:hover {
+    color: var(--text);
+  }
+}
+@media (max-width: 900px) {
+  .s-ostrip-lab {
+    display: none;
+  }
+}
+
+/* "My orders" page: orders remembered on this device. */
+.s-myorders {
+  margin-bottom: 40px;
+}
+.s-myorder {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 16px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+}
+.s-myorder[aria-current='true'] {
+  background: rgba(242, 240, 235, 0.04);
+  box-shadow: -12px 0 0 rgba(242, 240, 235, 0.04), 12px 0 0 rgba(242, 240, 235, 0.04);
+}
+.s-myorder-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  text-align: start;
+}
+.s-myorder-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.s-myorder-meta {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.s-myorder-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}

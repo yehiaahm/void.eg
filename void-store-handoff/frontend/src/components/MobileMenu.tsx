@@ -5,6 +5,7 @@ import { useI18n } from '../i18n'
 import { useAuth } from '../store/auth'
 import { useWishlist } from '../store/wishlist'
 import { SearchIcon } from './icons'
+import { ActiveOrdersDot } from './MyOrders'
 
 export function MobileMenu({ onShop, onClose }: { onShop: (e: React.MouseEvent) => void; onClose: () => void }) {
   const { lang, t, l } = useI18n()
@@ -53,7 +54,8 @@ export function MobileMenu({ onShop, onClose }: { onShop: (e: React.MouseEvent) 
         {saved > 0 && <span className="s-lab" style={{ marginInlineStart: 10 }}>({saved})</span>}
       </Link>
       <Link className="s-menu-link" to={`/${lang}/track`} onClick={onClose}>
-        {t.trackOrder}
+        {t.myOrdersNav}
+        <ActiveOrdersDot />
       </Link>
     </div>
   )

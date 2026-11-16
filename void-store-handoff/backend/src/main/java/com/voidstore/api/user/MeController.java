@@ -158,6 +158,18 @@ public class MeController {
 				.map(OrderDtos::summary).getContent();
 	}
 
+	public record ClaimRes(List<String> claimed) {}
+
+	/**
+	 * "Add these orders to my account": guest orders this device remembers (or one opened from its e-mail link). Each
+	 * needs its own private token; see {@link CustomerOrders#claim}.
+	 */
+	@PostMapping("/orders/claim")
+	@Transactional
+	public ClaimRes claimOrders(@Valid @RequestBody OrderDtos.TrackBatchReq req) {
+		return new ClaimRes(customerOrders.claim(me(), req.orders()));
+	}
+
 	@GetMapping("/orders/{number}")
 	@Transactional(readOnly = true)
 	public OrderDto myOrder(@PathVariable String number) {

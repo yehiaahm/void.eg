@@ -32,8 +32,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 /** VOID-03 (quote limits, coupon enumeration) and VOID-04 (guest tracking / cancel / return authorisation). */
 class OrderControllerTest {
 
-	private OrderService service;
-	private CustomerOrders customerOrders;
+	private OrderService service;	private CustomerOrders customerOrders;
 	private OrderController controller;
 
 	@BeforeEach
@@ -165,6 +164,20 @@ class OrderControllerTest {
 		assertThatCode(() -> controller.cancel(new TrackReq("VOID-001001", null, "good-token"), from("203.0.113.1")))
 				.doesNotThrowAnyException();
 		verify(customerOrders).guestCancel("VOID-001001", "good-token");
+	}
+
+	@Test
+	void theBatchLookupHasItsOwnBudgetAndDoesNotUseUpTheTrackOne() {
+		when(customerOrders.summariesForTokens(any())).thenReturn(List.of());
+		var req = new OrderDtos.TrackBatchReq(List.of(new OrderDtos.BatchEntry("VOID-001001", "t")));
+		int blocked = 0;
+		for (int i = 0; i < OrderController.BATCH_PER_IP + 10; i++) {
+			if (statusOf(() -> controller.trackBatch(req, from("198.51.100.90"))) == 429) blocked++;
+		}
+		assertThat(blocked).isEqualTo(10);
+		// the same address can still use the e-mail-link path
+		when(customerOrders.forGuestToken(anyString(), anyString())).thenReturn(mock(Order.class));
+		assertThat(statusOf(() -> controller.track(new TrackReq("VOID-001001", null, "t"), from("198.51.100.90")))).isEqualTo(200);
 	}
 
 	@Test

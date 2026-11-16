@@ -10,6 +10,7 @@ import com.voidstore.api.order.OrderRepository;
 import com.voidstore.api.order.OrderService;
 import com.voidstore.api.order.Phones;
 import com.voidstore.api.order.TrackingTokens;
+import com.voidstore.api.user.User;
 import com.voidstore.api.returns.ReturnDtos.ReturnDto;
 import java.util.List;
 import java.util.Locale;
@@ -67,6 +68,49 @@ public class CustomerOrders {
 		String n = normalizeNumber(number);
 		return orders.findByNumber(n).filter(o -> tokens.matches(o.getNumber(), token))
 				.orElseThrow(() -> ApiException.notFound("Order"));
+	}
+
+	/**
+	 * Status summaries for the orders a device remembers. Every entry must carry its own valid token; entries that
+	 * don't match (unknown number, wrong token) are silently left out, so the answer reveals nothing about them.
+	 */
+	public List<OrderDtos.OrderSummaryDto> summariesForTokens(List<OrderDtos.BatchEntry> entries) {
+		var seen = new java.util.HashSet<String>();
+		var out = new java.util.ArrayList<OrderDtos.OrderSummaryDto>();
+		for (var e : entries) {
+			String n = normalizeNumber(e.number());
+			if (!seen.add(n)) continue;
+			orders.findByNumber(n).filter(o -> tokens.matches(o.getNumber(), e.token())).map(OrderDtos::summary)
+					.ifPresent(out::add);
+		}
+		return out;
+	}
+
+	/**
+	 * Adds guest orders to a signed-in customer's account. The proof is the order's private token — exactly what lets a
+	 * guest cancel or return it — never an e-mail or phone match, which anyone could type. An order that already belongs
+	 * to another account is never moved. Returns the numbers that are in {@code user}'s account afterwards (newly added
+	 * or already theirs); everything else is silently left out, so the answer reveals nothing about other orders.
+	 */
+	@Transactional
+	public List<String> claim(User user, List<OrderDtos.BatchEntry> entries) {
+		var seen = new java.util.HashSet<String>();
+		var mine = new java.util.ArrayList<String>();
+		for (var e : entries) {
+			String n = normalizeNumber(e.number());
+			if (!seen.add(n)) continue;
+			var found = orders.findByNumber(n).filter(o -> tokens.matches(o.getNumber(), e.token()));
+			if (found.isEmpty()) continue;
+			var o = locks.lock(found.get()); // two sign-ins at once must not both win the same order
+			if (o.getUser() == null) {
+				o.setUser(user);
+				audit.info("order.claimed", "order", o.getNumber(), "user", user.getId());
+				mine.add(o.getNumber());
+			} else if (java.util.Objects.equals(o.getUser().getId(), user.getId())) {
+				mine.add(o.getNumber());
+			}
+		}
+		return mine;
 	}
 
 	/** Weak proof (read-only, masked view only): the order number and the phone used at checkout. */

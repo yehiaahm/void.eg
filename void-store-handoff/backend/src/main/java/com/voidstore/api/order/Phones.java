@@ -26,6 +26,12 @@ public final class Phones {
 		return d;
 	}
 
+	/** Local 01XXXXXXXXX -> international digits for WhatsApp (201XXXXXXXXX); null when it is not an Egyptian mobile. */
+	public static String international(String local) {
+		String p = normalize(local);
+		return EG_MOBILE.matcher(p).matches() ? "20" + p.substring(1) : null;
+	}
+
 	public static String requireValid(String raw) {
 		String p = normalize(raw);
 		if (!EG_MOBILE.matcher(p).matches()) {

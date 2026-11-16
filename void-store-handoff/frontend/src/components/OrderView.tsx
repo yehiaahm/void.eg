@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { ApiError, useProducts, useZones, type Order, type ReturnInput, type ReturnReason, type ReturnType } from '../api'
+import { ApiError, useProducts, useSettings, useZones, type Order, type ReturnInput, type ReturnReason, type ReturnType } from '../api'
 import { useI18n } from '../i18n'
 import { errorMessage } from '../lib/errors'
-import { formatPrice } from '../lib/format'
+import { formatDateTime, formatEta, formatPrice, waNumber } from '../lib/format'
 import { TextArea } from './Field'
 import { LineItem } from './LineItem'
 
@@ -47,6 +47,11 @@ export function OrderView({ order, onCancel, onReturn }: { order: Order } & Acti
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const zone = zones.find((z) => z.code === order.governorate)
+  const wa = waNumber(useSettings().data?.contactPhone)
+  // When each step happened: the last event that moved the order into that status.
+  const when = new Map<string, string>()
+  for (const e of order.timeline) if (e.toStatus) when.set(e.toStatus, e.at)
+  const onItsWay = order.status === 'NEW' || order.status === 'CONFIRMED' || order.status === 'SHIPPED'
   const reached = new Set(order.timeline.map((e) => e.toStatus))
   const stopped = order.status === 'CANCELLED' || order.status === 'RETURNED'
   const canReturn = !!onReturn && !!order.returnUntil && order.items.some((i) => i.returnableQty > 0)
@@ -84,9 +89,20 @@ export function OrderView({ order, onCancel, onReturn }: { order: Order } & Acti
           {FLOW.map((s) => (
             <li key={s} data-done={reached.has(s) || FLOW.indexOf(s) <= FLOW.indexOf(order.status as (typeof FLOW)[number])}>
               {t.status[s]}
+              {when.has(s) && (
+                <time dateTime={when.get(s)}>
+                  {formatDateTime(when.get(s)!, lang)}
+                </time>
+              )}
             </li>
           ))}
         </ol>
+      )}
+
+      {onItsWay && zone?.etaDays && (
+        <p className="s-sub" style={{ margin: 0 }}>
+          {t.deliveryTime(formatEta(zone.etaDays, lang))}
+        </p>
       )}
 
       {msg && (
@@ -189,6 +205,17 @@ export function OrderView({ order, onCancel, onReturn }: { order: Order } & Acti
         <dt className="s-grand">{t.total}</dt>
         <dd className="s-grand">{formatPrice(order.total, lang)}</dd>
       </dl>
+
+      {wa && (
+        <div className="s-card-box" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="s-sub" style={{ margin: 0 }}>
+            {t.needHelp}
+          </span>
+          <a className="s-cta" href={`https://wa.me/${wa}?text=${encodeURIComponent(t.whatsappAbout(order.number))}`} target="_blank" rel="noopener noreferrer">
+            {t.whatsappUs}
+          </a>
+        </div>
+      )}
 
       <div className="s-card-box">
         <dl className="s-kv">

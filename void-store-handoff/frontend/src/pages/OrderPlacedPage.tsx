@@ -4,6 +4,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useI18n } from '../i18n'
 import { formatPrice } from '../lib/format'
 import { useAuth } from '../store/auth'
+import { useMyOrders } from '../store/myOrders'
 import { useToast } from '../store/toast'
 import '../styles/forms.css'
 import './OrderPlacedPage.css'
@@ -19,6 +20,10 @@ export function OrderPlacedPage() {
   const flash = useToast()
   const state = (useLocation().state ?? {}) as { email?: string; total?: number; trackingToken?: string }
   useDocumentTitle(`${t.thanks} — VOID`)
+  // After a refresh the router state is gone; the device still remembers the order and its private link.
+  const known = useMyOrders().orders.find((o) => o.number === number)
+  const token = state.trackingToken ?? known?.token
+  const total = state.total ?? known?.total
 
   const copy = async () => {
     try {
@@ -26,6 +31,18 @@ export function OrderPlacedPage() {
       flash(t.copied)
     } catch {
       /* clipboard blocked — the number stays selectable */
+    }
+  }
+
+  // The private link that opens this order on any device; the customer can keep it or send it to themselves.
+  const link = token ? `${window.location.origin}/${lang}/track?order=${encodeURIComponent(number)}&t=${encodeURIComponent(token)}` : null
+  const copyLink = async () => {
+    if (!link) return
+    try {
+      await navigator.clipboard.writeText(link)
+      flash(t.linkCopied)
+    } catch {
+      /* clipboard blocked — the WhatsApp button still works */
     }
   }
 
@@ -56,9 +73,9 @@ export function OrderPlacedPage() {
               {t.copy}
             </button>
           </div>
-          {state.total != null && (
+          {total != null && (
             <p className="s-price" style={{ margin: '10px 0 0' }}>
-              {formatPrice(state.total, lang)} · {t.cod}
+              {formatPrice(total, lang)} · {t.cod}
             </p>
           )}
         </div>
@@ -68,8 +85,31 @@ export function OrderPlacedPage() {
             {t.confirmationSent(state.email)}
           </p>
         )}
+        {link && (
+          <div className="s-done-in" style={{ animationDelay: '2.2s', display: 'grid', gap: 8, justifyItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, justifyContent: 'center' }}>
+              <button type="button" className="s-linkbtn" onClick={copyLink}>
+                {t.copyLink}
+              </button>
+              <a className="s-linkbtn" href={`https://wa.me/?text=${encodeURIComponent(t.shareMessage(number, link))}`} target="_blank" rel="noopener noreferrer">
+                {t.sendLinkWhatsapp}
+              </a>
+            </div>
+            <p className="s-fhint" style={{ margin: 0, maxWidth: 420, textAlign: 'center' }}>
+              {t.saveLinkHint}
+            </p>
+          </div>
+        )}
+        {!user && (
+          <p className="s-sub s-done-in" style={{ margin: 0, animationDelay: '2.25s' }}>
+            {t.accountNudge}{' '}
+            <Link className="s-linkbtn" to={`/${lang}/account?mode=signup`}>
+              {t.accountNudgeLink}
+            </Link>
+          </p>
+        )}
         <div className="s-done-in s-done-actions" style={{ animationDelay: '2.3s' }}>
-          <Link className="s-add" to={user ? `/${lang}/account/orders/${number}` : `/${lang}/track?order=${number}${state.trackingToken ? `&t=${encodeURIComponent(state.trackingToken)}` : ''}`}>
+          <Link className="s-add" to={user ? `/${lang}/account/orders/${number}` : `/${lang}/track?order=${number}${token ? `&t=${encodeURIComponent(token)}` : ''}`}>
             {t.trackOrder}
           </Link>
           <Link className="s-cta" to={`/${lang}`}>

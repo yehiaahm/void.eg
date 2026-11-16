@@ -66,6 +66,13 @@ void:
     access-minutes: ${JWT_ACCESS_MINUTES:15}
     refresh-days: ${JWT_REFRESH_DAYS:30}
     secure-cookie: ${COOKIE_SECURE:false}
+  whatsapp:
+    # Order updates over WhatsApp (Meta Cloud API). Off by default; see docs/DEPLOY.md before switching it on.
+    enabled: ${WHATSAPP_ENABLED:false}
+    token: ${WHATSAPP_TOKEN:}
+    phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
+    api-version: ${WHATSAPP_API_VERSION:v21.0}
+    template-prefix: ${WHATSAPP_TEMPLATE_PREFIX:void_order_}
   bootstrap:
     # ADMIN_USERNAME / ADMIN_PASSWORD are accepted as aliases (the username must be an email).
     owner-email: ${OWNER_EMAIL:${ADMIN_USERNAME:}}

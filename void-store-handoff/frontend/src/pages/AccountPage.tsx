@@ -10,6 +10,7 @@ import { useI18n } from '../i18n'
 import { EMAIL_RE, errorMessage, isEgMobile } from '../lib/errors'
 import { formatPrice } from '../lib/format'
 import { isStaff, useAuth } from '../store/auth'
+import { useMyOrders } from '../store/myOrders'
 import { useToast } from '../store/toast'
 import '../styles/forms.css'
 
@@ -153,13 +154,50 @@ function AuthForms() {
 
 // ------------------------------------------------------------------ signed in
 
+/** Guest orders this device remembers that aren't in the account yet, with one button to add them. */
+function ClaimOrders() {
+  const { t } = useI18n()
+  const { unclaimed, claim } = useMyOrders()
+  const flash = useToast()
+  const [busy, setBusy] = useState(false)
+  if (!unclaimed.length) return null
+  const add = async () => {
+    setBusy(true)
+    try {
+      await claim(unclaimed.map((o) => o.number))
+      flash(t.claimDone)
+    } catch (err) {
+      flash(errorMessage(err, t))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <div className="s-card-box" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <span className="s-sub" style={{ margin: 0 }}>
+        {t.claimTitle(unclaimed.length)} {t.claimHint}
+      </span>
+      <button type="button" className="s-add" onClick={add} disabled={busy}>
+        {busy ? <span className="s-spinner" aria-hidden="true" /> : t.claimAdd}
+      </button>
+    </div>
+  )
+}
+
 function OrdersTab() {
   const { lang, t } = useI18n()
   const { data, isLoading } = useQuery({ queryKey: ['my-orders'], queryFn: api.myOrders })
   if (isLoading) return <p className="s-sub">…</p>
-  if (!data?.length) return <p className="s-sub">{t.noOrders}</p>
+  if (!data?.length)
+    return (
+      <>
+        <ClaimOrders />
+        <p className="s-sub">{t.noOrders}</p>
+      </>
+    )
   return (
     <div>
+      <ClaimOrders />
       {data.map((o) => (
         <Link key={o.number} to={`/${lang}/account/orders/${o.number}`} className="s-line" style={{ gridTemplateColumns: '1fr auto' }}>
           <span className="s-linemeta">

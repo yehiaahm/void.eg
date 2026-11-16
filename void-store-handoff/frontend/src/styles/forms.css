@@ -466,3 +466,12 @@ select.s-input {
     grid-template-columns: 1fr;
   }
 }
+
+/* Time a step happened, under its label in the order timeline. */
+.s-timeline li time {
+  display: block;
+  margin-top: 4px;
+  color: var(--faint);
+  font: 400 11px/1.3 var(--f-mono);
+  letter-spacing: 0.02em;
+}

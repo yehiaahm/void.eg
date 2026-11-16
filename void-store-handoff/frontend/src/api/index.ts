@@ -36,6 +36,8 @@ export const api = {
   sendContact: (input: ContactInput) => http.post<void>('/contact', input as unknown as Record<string, unknown>),
   /** `token` (from the e-mailed link) = full view + actions; `phone` alone = masked, read-only status. */
   track: (number: string, proof: { token?: string; phone?: string }) => http.post<Order>('/orders/track', { number, ...proof }),
+  /** Status of every order this device remembers (number + private token each). Unmatched entries are left out. */
+  trackBatch: (orders: { number: string; token: string }[]) => http.post<OrderSummary[]>('/orders/track-batch', { orders }),
   guestCancel: (number: string, token: string) => http.post<Order>('/orders/cancel', { number, token }),
   guestReturn: (number: string, token: string, r: ReturnInput) => http.post<Order>('/orders/returns', { number, token, ...r }),
   myReturn: (number: string, r: ReturnInput) =>
@@ -54,6 +56,8 @@ export const api = {
   updateAddress: (id: number, a: AddressInput) => http.put<Address>(`/me/addresses/${id}`, a as unknown as Record<string, unknown>),
   deleteAddress: (id: number) => http.del<void>(`/me/addresses/${id}`),
   myOrders: () => http.get<OrderSummary[]>('/me/orders', true),
+  /** Add guest orders (number + private token each) to the signed-in account; answers with the numbers now in it. */
+  claimOrders: (orders: { number: string; token: string }[]) => http.post<{ claimed: string[] }>('/me/orders/claim', { orders }, true),
   myOrder: (number: string) => http.get<Order>(`/me/orders/${encodeURIComponent(number)}`, true),
   cancelMyOrder: (number: string) => http.post<Order>(`/me/orders/${encodeURIComponent(number)}/cancel`, undefined, true),
 }

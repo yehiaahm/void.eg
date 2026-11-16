@@ -70,6 +70,24 @@ Copy the backups off the server (for example to object storage). Check the volum
 - Link previews on Instagram, WhatsApp and Facebook use each product's front photo, name and description — upload photos before sharing links.
 - Health check: `https://your-domain/actuator/health`.
 
+## WhatsApp order updates (optional, off by default)
+
+The store can message customers on WhatsApp when their order is received, confirmed, shipped, delivered or cancelled. It uses Meta's **WhatsApp Business Cloud API**. Nothing is sent, and the checkout box is hidden, until all of this is done:
+
+1. In Meta Business Manager: verify the business, add a WhatsApp Business number, and create a permanent access token (System User) with the `whatsapp_business_messaging` permission.
+2. Create five **message templates** (category *Utility*), each in **both Arabic (`ar`) and English (`en`)**, named `void_order_placed`, `void_order_confirmed`, `void_order_shipped`, `void_order_delivered`, `void_order_cancelled` (the prefix can be changed with `WHATSAPP_TEMPLATE_PREFIX`). Each takes three body variables: `{{1}}` first name, `{{2}}` order number, `{{3}}` the customer's private tracking link. Example (shipped, English): *Hi {{1}}, your VOID order {{2}} is on its way. Track it: {{3}}*. Meta must approve each template before it can be sent; the wording is yours to write.
+3. Set the variables on the app service and redeploy:
+
+   | Variable | Value |
+   |---|---|
+   | `WHATSAPP_ENABLED` | `true` |
+   | `WHATSAPP_TOKEN` | the permanent access token |
+   | `WHATSAPP_PHONE_NUMBER_ID` | the WhatsApp number's *Phone number ID* (digits) |
+   | `WHATSAPP_API_VERSION` | optional, default `v21.0` |
+   | `WHATSAPP_TEMPLATE_PREFIX` | optional, default `void_order_` |
+
+Customers are only messaged if they tick *Send me order updates on WhatsApp* at checkout (unticked by default; WhatsApp requires an explicit opt-in). The message goes to the mobile number on the order. Failures are only logged (`WhatsApp … failed`), never shown to the shopper. Mention WhatsApp messages in the privacy policy (Admin → Content) before switching this on.
+
 ## Railway
 
 The live store (voideg.app) is the `Dockerfile` deployed by Railway from `main`, with Railway's MySQL (the `MYSQL*` variables are picked up automatically). Pushing to `main` redeploys it.

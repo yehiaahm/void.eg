@@ -8,6 +8,7 @@ import { useBag } from '../store/bag'
 import { useWishlist } from '../store/wishlist'
 import { BagIcon, CloseIcon, HeartIcon, MenuIcon, UserIcon } from './icons'
 import { LangSwitch } from './LangSwitch'
+import { ActiveOrdersDot } from './MyOrders'
 import './Header.css'
 
 const MobileMenu = lazy(() => import('./MobileMenu').then((m) => ({ default: m.MobileMenu })))
@@ -61,7 +62,8 @@ export function Header() {
               {t.shop}
             </a>
             <Link className="s-link s-lab" to={`${home}/track`} style={{ color: 'var(--text)' }}>
-              {t.trackOrder}
+              {t.myOrdersNav}
+              <ActiveOrdersDot />
             </Link>
           </nav>
           <button

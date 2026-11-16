@@ -258,6 +258,7 @@ public class OrderService {
 		o.setBuilding(req.address().building());
 		o.setAddressNotes(req.address().notes());
 		o.setCustomerNote(req.note());
+		o.setWhatsappOptIn(Boolean.TRUE.equals(req.whatsappOptIn()));
 		o.setSubtotal(subtotal);
 		o.setDiscount(discount);
 		o.setShipping(shipping);

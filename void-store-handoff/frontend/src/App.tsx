@@ -6,11 +6,13 @@ import { AnnouncementBar } from './components/AnnouncementBar'
 import { BagDock } from './components/BagDock'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
+import { OrderStrip } from './components/MyOrders'
 import { I18nProvider, isLang, preferredLang, useI18n } from './i18n'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { AuthProvider, isStaff, useAuth } from './store/auth'
 import { BagProvider, useBag } from './store/bag'
+import { MyOrdersProvider } from './store/myOrders'
 import { ToastProvider } from './store/toast'
 import { WishlistProvider } from './store/wishlist'
 
@@ -49,6 +51,8 @@ function LazyBag() {
 /** Still reachable while the store is closed: order tracking, accounts, policy pages. */
 const OPEN_WHEN_CLOSED = /^\/(en|ar)\/(track|account|order|pages)(\/|$)/
 const CLOSED_HINT = 'void.closed'
+/** The order-in-progress strip shows on the home page only. */
+const HOME = /^\/(en|ar)\/?$/
 
 /**
  * Whether the owner has closed the store. Until /settings answers, trust the server's
@@ -106,6 +110,7 @@ function StoreLayout() {
     <I18nProvider lang={lang}>
       {closed && staff && <StaffClosedBar />}
       <AnnouncementBar />
+      {HOME.test(pathname) && <OrderStrip />}
       <Header />
       <Suspense fallback={pageFallback}>
         <Outlet />
@@ -153,13 +158,15 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <WishlistProvider>
-          <BagProvider>
-            <ToastProvider>
-              <RouterProvider router={router} />
-            </ToastProvider>
-          </BagProvider>
-        </WishlistProvider>
+        <MyOrdersProvider>
+          <WishlistProvider>
+            <BagProvider>
+              <ToastProvider>
+                <RouterProvider router={router} />
+              </ToastProvider>
+            </BagProvider>
+          </WishlistProvider>
+        </MyOrdersProvider>
       </AuthProvider>
     </QueryClientProvider>
   )

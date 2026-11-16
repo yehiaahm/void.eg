@@ -122,7 +122,9 @@ class StoreFlowTests {
 		db.update("update product_variants v join products p on p.id = v.product_id set v.stock = 250 where p.slug = 'singularity-tee' and v.size = 'S'");
 		var r = call("GET", "/products", null, null, null);
 		assertThat(r.status()).isEqualTo(200);
-		assertThat(r.body().size()).isEqualTo(5); // 3 real pieces (longsleeve, white hoodie, navy hoodie) + the 2 test fixtures; the V2 demos are gone (V14, V18, V19)
+		// 3 real pieces (longsleeve, white hoodie, navy hoodie) + 3 caps (V24, V28) + the 2 test fixtures; the V2 demos are gone (V14, V18, V19)
+		assertThat(r.body().size()).isEqualTo(8);
+		assertThat(java.util.stream.StreamSupport.stream(r.body().spliterator(), false).filter(p -> p.get("slug").asText().contains("cap")).count()).isEqualTo(3);
 		assertThat(findSlug(r.body(), "longsleeve-black").get("images").size()).isEqualTo(4); // 4 gallery photos (V20 removed the cutout)
 		assertThat(findSlug(r.body(), "void-trace-hoodie-white").get("images").size()).isEqualTo(4); // 4 gallery photos (V20 removed the cutout)
 		assertThat(r.body().toString()).doesNotContain("event-horizon-hoodie");

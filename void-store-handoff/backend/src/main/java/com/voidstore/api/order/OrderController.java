@@ -6,10 +6,12 @@ import com.voidstore.api.auth.RateLimiter;
 import com.voidstore.api.common.ApiException;
 import com.voidstore.api.content.SettingsService;
 import com.voidstore.api.order.OrderDtos.OrderDto;
+import com.voidstore.api.order.OrderDtos.OrderSummaryDto;
 import com.voidstore.api.order.OrderDtos.PlaceReq;
 import com.voidstore.api.order.OrderDtos.PlaceRes;
 import com.voidstore.api.order.OrderDtos.QuoteReq;
 import com.voidstore.api.order.OrderDtos.QuoteRes;
+import com.voidstore.api.order.OrderDtos.TrackBatchReq;
 import com.voidstore.api.order.OrderDtos.TrackReq;
 import com.voidstore.api.returns.CustomerOrders;
 import com.voidstore.api.returns.ReturnDtos;
@@ -17,6 +19,7 @@ import com.voidstore.api.returns.ReturnService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.time.Duration;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,6 +39,9 @@ public class OrderController {
 	/** Wrong phone guesses per order number (VOID-04); the token path is not affected, so nobody can lock a customer out. */
 	static final int PHONE_FAILURES_PER_ORDER = 8;
 	static final Duration PHONE_WINDOW = Duration.ofHours(1);
+	/** Calls of the "my orders" batch lookup per client address; a page load costs one. */
+	static final int BATCH_PER_IP = 60;
+	static final Duration BATCH_WINDOW = Duration.ofMinutes(10);
 
 	private final OrderService service;
 	private final CustomerOrders customerOrders;
@@ -112,6 +118,18 @@ public class OrderController {
 			audit.warn("order.track.bad_phone", "order", number);
 			throw e;
 		}
+	}
+
+	/**
+	 * Status of every order a device remembers, in one call. Token-only (no phone path), summaries only, and
+	 * unmatched entries are left out of the answer. It has its own address budget so the home strip can't use up
+	 * the one {@link #track} and {@link #cancel} share.
+	 */
+	@PostMapping("/track-batch")
+	@Transactional(readOnly = true)
+	public List<OrderSummaryDto> trackBatch(@Valid @RequestBody TrackBatchReq req, HttpServletRequest http) {
+		limiter.check("track-batch-ip:" + limiter.ip(http), BATCH_PER_IP, BATCH_WINDOW);
+		return customerOrders.summariesForTokens(req.orders());
 	}
 
 	/** Guest cancels a not-yet-confirmed order: needs the private token, not just the phone. */

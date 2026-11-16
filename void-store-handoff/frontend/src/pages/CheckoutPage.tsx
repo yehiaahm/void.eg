@@ -11,6 +11,7 @@ import { EMAIL_RE, errorMessage, isEgMobile } from '../lib/errors'
 import { formatPrice } from '../lib/format'
 import { useAuth } from '../store/auth'
 import { useBag } from '../store/bag'
+import { useMyOrders } from '../store/myOrders'
 import '../styles/forms.css'
 import './CheckoutPage.css'
 
@@ -34,6 +35,7 @@ export function CheckoutPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const { remember } = useMyOrders()
   const { data: zones = [], isLoading: zonesLoading } = useZones()
   const { data: settings } = useSettings()
   const { data: saved = [] } = useQuery({ queryKey: ['addresses', user?.id], queryFn: api.addresses, enabled: !!user })
@@ -44,6 +46,8 @@ export function CheckoutPage() {
   const [coupon, setCoupon] = useState('')
   const [addressId, setAddressId] = useState<number | 'new'>('new')
   const [saveAddress, setSaveAddress] = useState(true)
+  // WhatsApp needs an explicit opt-in, so it starts unticked.
+  const [waOptIn, setWaOptIn] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -108,9 +112,12 @@ export function CheckoutPage() {
         paymentMethod: 'COD',
         lang,
         saveAddress: !!user && addressId === 'new' && saveAddress,
+        whatsappOptIn: !!settings?.whatsappUpdates && waOptIn,
       })
       qc.invalidateQueries({ queryKey: ['products'] })
       qc.invalidateQueries({ queryKey: ['product'] })
+      // The device remembers the order (and its private link), so the customer can follow it from the home strip.
+      remember(res.number, res.trackingToken)
       navigate(`/${lang}/order/${res.number}`, { replace: true, state: { email: f.email.trim(), total: res.total, trackingToken: res.trackingToken } })
       bag.clear()
     } catch (e) {
@@ -217,6 +224,12 @@ export function CheckoutPage() {
               )}
             </fieldset>
 
+            {settings?.whatsappUpdates && (
+              <label className="s-check">
+                <input type="checkbox" checked={waOptIn} onChange={(e) => setWaOptIn(e.target.checked)} />
+                {t.whatsappOptIn}
+              </label>
+            )}
             <TextArea label={t.orderNote} name="note" value={f.note} onChange={set('note')} maxLength={1000} rows={3} />
 
             {formError && (
