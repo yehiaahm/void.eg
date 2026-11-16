@@ -9,24 +9,65 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Stores product photos on disk under {uploads}/products/{sha256}.{ext}, served at /uploads/products/...
  * The type is checked from the file's magic bytes, not the client-supplied content type.
- * Swap this class for an S3 / R2 implementation when moving to object storage.
+ * The directory must be persistent storage (a Docker volume, or a Railway volume mounted at UPLOADS_DIR):
+ * a container's own disk is wiped on every deploy. Swap this class for an S3 / R2 implementation when moving
+ * to object storage.
  */
 @Service
 public class ImageStorage {
 
+	private static final Logger log = LoggerFactory.getLogger(ImageStorage.class);
 	private static final long MAX_BYTES = 8L * 1024 * 1024;
 
 	private final Path root;
 
 	public ImageStorage(AppProperties props) {
 		this.root = Path.of(props.uploadsDir()).toAbsolutePath().normalize();
+		try {
+			Files.createDirectories(root.resolve("products"));
+		} catch (IOException | SecurityException e) {
+			// reported by startupWarnings below; the app still starts so the store keeps selling
+		}
+		List<String> warnings = startupWarnings(root, System.getenv());
+		if (warnings.isEmpty()) log.info("Product uploads are stored in {}", root);
+		else warnings.forEach(log::warn);
+	}
+
+	/**
+	 * Problems with the uploads directory, logged at start-up so they show in the deploy logs: an unwritable
+	 * directory (uploads would fail) and, on Railway, no volume at that path (uploads would vanish on the next
+	 * deploy). Railway sets RAILWAY_VOLUME_MOUNT_PATH only when a volume is attached to the service.
+	 */
+	static List<String> startupWarnings(Path root, Map<String, String> env) {
+		List<String> warnings = new ArrayList<>();
+		Path products = root.resolve("products");
+		if (!Files.isDirectory(products) || !Files.isWritable(products)) {
+			warnings.add("Uploads directory " + products + " is missing or not writable: product photo uploads will fail");
+		}
+		boolean onRailway = env.containsKey("RAILWAY_PROJECT_ID") || env.containsKey("RAILWAY_ENVIRONMENT_NAME");
+		if (onRailway) {
+			String mount = env.get("RAILWAY_VOLUME_MOUNT_PATH");
+			boolean covered = mount != null && !mount.isBlank()
+					&& root.startsWith(Path.of(mount).toAbsolutePath().normalize());
+			if (!covered) {
+				warnings.add("No Railway volume is mounted at " + root + (mount == null || mount.isBlank() ? "" : " (volume is at " + mount + ")")
+						+ ": uploaded product photos will be deleted on the next deploy. Attach a volume at " + root
+						+ " (docs/DEPLOY.md, \"Railway\").");
+			}
+		}
+		return warnings;
 	}
 
 	public String store(MultipartFile file) {
