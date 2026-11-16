@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Product } from '../api/types'
 import { useI18n } from '../i18n'
-import { capColorOf } from '../lib/cap'
-import { CapViewer } from './cap3d/CapViewer'
 import { ProductMedia, hasPhoto } from './ProductMedia'
 import { WishButton } from './WishButton'
 import './ProductCard.css'
@@ -14,23 +12,15 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
   // glow; the model photo then appears on hover. Without one the card behaves as before.
   const cut = hasPhoto(product, 'cutout')
   const photo = cut || hasPhoto(product, 'front')
-  // Caps: the 3D cap keeps turning on the card (the cut-out front photo is shown while it loads).
-  const cap = capColorOf(product)
   return (
     <div className="s-card" style={{ animationDelay: `${index * 0.05}s` }}>
       {/* The name is not shown on the card (owner request, 2026-11-14) — only on the product page. It stays
           in aria-label so the link still has an accessible name. */}
       <Link className="s-cardlink" to={`/${lang}/product/${product.slug}`} state={{ fromShop: true }} aria-label={l(product.name)}>
-        <span className={`s-img${photo ? ' s-img-photo' : ''}${cut ? ' s-img-cut' : ''}${cap ? ' s-img-capcut' : ''}`}>
-          {cap ? (
-            <CapViewer color={cap} name={l(product.name)} poster={<ProductMedia product={product} kind="front" className="s-front" sizes="(max-width: 900px) 50vw, 25vw" />} />
-          ) : (
-            <>
-              <ProductMedia product={product} kind={cut ? 'cutout' : 'front'} className="s-front" sizes="(max-width: 900px) 50vw, 25vw" />
-              <ProductMedia product={product} kind={cut ? 'front' : 'back'} className="s-back" sizes="(max-width: 900px) 50vw, 25vw" />
-              {!photo && <span className="s-ph">{t.productPhoto}</span>}
-            </>
-          )}
+        <span className={`s-img${photo ? ' s-img-photo' : ''}${cut ? ' s-img-cut' : ''}`}>
+          <ProductMedia product={product} kind={cut ? 'cutout' : 'front'} className="s-front" sizes="(max-width: 900px) 50vw, 25vw" />
+          <ProductMedia product={product} kind={cut ? 'front' : 'back'} className="s-back" sizes="(max-width: 900px) 50vw, 25vw" />
+          {!photo && <span className="s-ph">{t.productPhoto}</span>}
           {soldOut && <span className="s-tag">{t.soldOut}</span>}
         </span>
       </Link>
