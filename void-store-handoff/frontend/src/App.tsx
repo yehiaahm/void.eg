@@ -27,6 +27,7 @@ const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ defa
 const AccountOrderPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountOrderPage })))
 const ResetPasswordPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.ResetPasswordPage })))
 const AdminApp = lazy(() => import('./admin/AdminApp'))
+const CapLab = lazy(() => import('./pages/CapLab').then((m) => ({ default: m.CapLab })))
 const ClosedPage = lazy(() => import('./pages/ClosedPage').then((m) => ({ default: m.ClosedPage })))
 
 const queryClient = new QueryClient({
@@ -133,6 +134,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'product/:slug', element: <ProductPage /> },
+      ...(import.meta.env.DEV ? [{ path: 'cap-lab', element: <CapLab /> }] : []),
       { path: 'checkout', element: <CheckoutPage /> },
       { path: 'order/:number', element: <OrderPlacedPage /> },
       { path: 'track', element: <TrackPage /> },
