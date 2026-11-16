@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { assetUrl, useProduct, useProducts, useSettings } from '../api'
 import type { Product, Size } from '../api/types'
+import { CapViewer } from '../components/cap3d/CapViewer'
 import { BackIcon, MinusIcon, PlusIcon } from '../components/icons'
 import { ProductCard } from '../components/ProductCard'
 import { useDocumentTitle, useJsonLd } from '../hooks/useDocumentTitle'
 import { useI18n } from '../i18n'
+import { capColorOf } from '../lib/cap'
 import { dropNo, formatPrice } from '../lib/format'
 import { MAX_QTY, useBag } from '../store/bag'
 import { useToast } from '../store/toast'
@@ -39,16 +41,24 @@ function ProductView({ product }: { product: Product }) {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [size, setSize] = useState<Size | null>(null)
+  // One-size products (caps) have a single variant: it is selected for the shopper and no size picker is shown.
+  const oneSize = product.variants.length === 1
+  const [size, setSize] = useState<Size | null>(oneSize ? product.variants[0].size : null)
   const [qty, setQty] = useState(1)
   const [hint, setHint] = useState(false)
   const [gi, setGi] = useState(0)
   // Only the pictures that are really there, in the order set in the admin. A deleted picture simply
   // disappears (no empty slot); the card-only "cutout" is not part of the gallery. With no pictures at
   // all a single placeholder tile is shown.
-  const gallery = product.images.filter((i) => i.kind !== 'cutout')
-  const slides = gallery.length ? gallery : [null]
+  // Caps are shown by the 3D viewer. Their front/back slots hold still renders of that same 3D cap (for
+  // the bag, checkout and link previews), so the gallery under the viewer only shows the other slots —
+  // empty today (owner, 2026-11-16: no photos of the caps on the site) — and needs no placeholder.
+  const cap = capColorOf(product)
+  const gallery = product.images.filter((i) => i.kind !== 'cutout' && !(cap && (i.kind === 'front' || i.kind === 'back')))
+  const capPoster = cap ? product.images.find((i) => i.kind === 'front') : undefined
+  const slides = gallery.length || cap ? gallery : [null]
   const gal = useRef<HTMLDivElement>(null)
+  const capBox = useRef<HTMLDivElement>(null)
   const sizeFitRef = useRef<HTMLDetailsElement>(null)
 
   const name = l(product.name)
@@ -97,7 +107,7 @@ function ProductView({ product }: { product: Product }) {
       return
     }
     bag.add(product.slug, size, qty)
-    flyToBag(gal.current?.children[gi] ?? null)
+    flyToBag((cap ? capBox.current : gal.current?.children[gi]) ?? null)
     // FSI/PDI keep the Latin name + size readable inside Arabic text
     flash(`${t.added} — ⁨${name} · ${size}${qty > 1 ? ` × ${qty}` : ''}⁩`)
   }
@@ -154,17 +164,24 @@ function ProductView({ product }: { product: Product }) {
       </a>
       <div className="s-pgrid">
         <div>
-          <div className="s-gal" ref={gal} onScroll={onGalScroll}>
-            {slides.map((img, i) => (
-              <figure key={img ? img.url : 'placeholder'} aria-label={t.imageOf(i + 1, slides.length)}>
-                {img ? (
-                  <img src={assetUrl(img.url)} alt={l(img.alt) || ''} loading="eager" decoding="async" sizes="(max-width: 900px) 100vw, 30vw" />
-                ) : (
-                  <figcaption className="s-ph">{t.productPhoto}</figcaption>
-                )}
-              </figure>
-            ))}
-          </div>
+          {cap && (
+            <div className="s-pcap" ref={capBox}>
+              <CapViewer color={cap} name={name} interactive poster={capPoster ? <img src={assetUrl(capPoster.url)} alt="" /> : undefined} />
+            </div>
+          )}
+          {slides.length > 0 && (
+            <div className={`s-gal${cap ? ' s-gal-cap' : ''}`} ref={gal} onScroll={onGalScroll}>
+              {slides.map((img, i) => (
+                <figure key={img ? img.url : 'placeholder'} aria-label={t.imageOf(i + 1, slides.length)}>
+                  {img ? (
+                    <img src={assetUrl(img.url)} alt={l(img.alt) || ''} loading="eager" decoding="async" sizes="(max-width: 900px) 100vw, 30vw" />
+                  ) : (
+                    <figcaption className="s-ph">{t.productPhoto}</figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          )}
           {slides.length > 1 && (
             <div className="s-dots">
               {slides.map((img, i) => (
@@ -193,6 +210,9 @@ function ProductView({ product }: { product: Product }) {
             </p>
           </div>
 
+          {oneSize ? (
+            <p className="s-lab">{t.oneSize}</p>
+          ) : (
           <div className="s-stack">
             <div className="s-row">
               <span className="s-lab" id="s-size-label">
@@ -226,6 +246,7 @@ function ProductView({ product }: { product: Product }) {
               </p>
             )}
           </div>
+          )}
 
           <div className="s-row s-center">
             <span className="s-lab">{t.quantity}</span>

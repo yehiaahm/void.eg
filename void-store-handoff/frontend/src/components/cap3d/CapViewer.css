@@ -1,0 +1,92 @@
+.s-cap3d {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* soft studio spot so a dark cap does not sink into the black tile */
+  background:
+    radial-gradient(ellipse 62% 48% at 50% 54%, rgba(242, 240, 235, 0.13), rgba(242, 240, 235, 0.04) 55%, transparent 78%),
+    radial-gradient(ellipse 46% 7% at 50% 86%, rgba(242, 240, 235, 0.1), transparent 70%), #050507;
+}
+.s-cap3d-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.s-cap3d[data-state='ready'] .s-cap3d-canvas {
+  opacity: 1;
+}
+.s-cap3d-live .s-cap3d-canvas {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: pan-y; /* vertical swipes still scroll the page; horizontal ones spin the cap */
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.s-cap3d-live .s-cap3d-canvas.is-grab {
+  cursor: grabbing;
+}
+.s-cap3d-live .s-cap3d-canvas:focus-visible {
+  outline: 1px solid var(--line-4);
+  outline-offset: -4px;
+}
+.s-cap3d-ui {
+  position: absolute;
+  inset-inline: 12px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.s-cap3d-hint {
+  font: 500 11px/1 var(--f-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+:root[lang='ar'] .s-cap3d-hint {
+  font: 500 13px/1 var(--f-ar);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.s-cap3d-btns {
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+.s-cap3d-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.s-cap3d-btn:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .s-cap3d-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: var(--line-4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .s-cap3d-canvas {
+    transition: none;
+  }
+}

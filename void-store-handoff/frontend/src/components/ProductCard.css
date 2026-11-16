@@ -89,6 +89,16 @@
   object-fit: contain;
   filter: drop-shadow(0 0 3px rgba(242, 240, 235, 0.55)) drop-shadow(0 0 18px rgba(242, 240, 235, 0.3));
 }
+/* Caps: clean cut-out product shot centred on the tile (front; the back cut-out fades in on hover). */
+.s-img-capcut {
+  background: radial-gradient(ellipse 70% 55% at 50% 50%, #18181b 0%, #0b0b0e 70%);
+}
+.s-img-capcut img {
+  inset: 12% 10%;
+  width: 80%;
+  height: 76%;
+  object-fit: contain;
+}
 .s-tag {
   position: absolute;
   inset-inline-start: 10px;
