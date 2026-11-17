@@ -89,6 +89,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(Exception.class)
 	ResponseEntity<ErrorBody> unexpected(Exception e) {
 		log.error("Unhandled error", e);
+		io.sentry.Sentry.captureException(e);
 		return ResponseEntity.internalServerError().body(new ErrorBody("server_error", "Something went wrong", null));
 	}
 }

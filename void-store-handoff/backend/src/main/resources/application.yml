@@ -46,6 +46,16 @@ server:
   # TCP peer is a trusted proxy (void.trusted-proxies), so a client can never choose its own rate-limit identity.
   forward-headers-strategy: none
 
+sentry:
+  # Error monitoring. SENTRY_DSN overrides the VOID project key; SENTRY_DSN= (empty) turns reporting off.
+  dsn: ${SENTRY_DSN:https://03c7ec805c8f5fda0ccaa6c66ba273f1@o4512447745818624.ingest.de.sentry.io/4512447896617040}
+  environment: ${SENTRY_ENVIRONMENT:${RAILWAY_ENVIRONMENT_NAME:development}}
+  server-name: void-api
+  send-default-pii: false
+  traces-sample-rate: 0.0
+  tags:
+    app: void-api
+
 management:
   endpoints:
     web:
