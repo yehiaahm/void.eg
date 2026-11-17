@@ -4,6 +4,8 @@ import type {
   Address,
   AddressInput,
   ContactInput,
+  GeoPlace,
+  Lang,
   LineInput,
   Order,
   OrderSummary,
@@ -27,6 +29,8 @@ export const api = {
   products: () => http.get<Product[]>('/products'),
   product: (slug: string) => http.get<Product>(`/products/${encodeURIComponent(slug)}`),
   zones: () => http.get<ShippingZone[]>('/shipping-zones'),
+  reverseGeocode: (lat: number, lng: number, lang: Lang) =>
+    http.get<GeoPlace>(`/geocode/reverse?lat=${lat.toFixed(6)}&lng=${lng.toFixed(6)}&lang=${lang}`),
   page: (slug: string) => http.get<StorePage>(`/pages/${encodeURIComponent(slug)}`),
 
   quote: (items: LineInput[], governorate?: string, couponCode?: string, email?: string, phone?: string) =>

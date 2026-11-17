@@ -106,6 +106,15 @@ export interface ShippingZone {
   etaDays: string
 }
 
+/** "Use my location": the address at a point. `governorate` is the map's own name; match it with `resolveZone`. */
+export interface GeoPlace {
+  inEgypt: boolean
+  governorate: string
+  city: string
+  street: string
+  building: string
+}
+
 export interface StorePage {
   slug: string
   title: Localized
@@ -150,7 +159,8 @@ export interface Quote {
 export interface PlaceOrderInput {
   items: LineInput[]
   contact: { email: string; name: string; phone: string }
-  address: { governorate: string; city: string; street: string; building?: string; notes?: string }
+  /** `lat` / `lng`: the exact spot shared with "Use my location" (staff-only; the API ignores anything unusable). */
+  address: { governorate: string; city: string; street: string; building?: string; notes?: string; lat?: number; lng?: number }
   note?: string
   couponCode?: string
   paymentMethod: 'COD'

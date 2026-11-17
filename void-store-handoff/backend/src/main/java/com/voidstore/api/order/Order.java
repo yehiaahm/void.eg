@@ -77,6 +77,9 @@ public class Order {
 	@Column(nullable = false) private String street;
 	@Column(nullable = false) private String building = "";
 	@Column(name = "address_notes", nullable = false) private String addressNotes = "";
+	/** Exact spot the customer shared with "Use my location" (null when they typed the address). */
+	@Column(name = "pin_lat") private Double pinLat;
+	@Column(name = "pin_lng") private Double pinLng;
 	@Column(name = "customer_note", nullable = false) private String customerNote = "";
 	/** The customer ticked "send me order updates on WhatsApp" at checkout. */
 	@Column(name = "whatsapp_optin", nullable = false) private boolean whatsappOptIn;
@@ -145,6 +148,12 @@ public class Order {
 	public void setCity(String v) { this.city = v; }
 	public String getStreet() { return street; }
 	public void setStreet(String v) { this.street = v; }
+	public Double getPinLat() { return pinLat; }
+	public Double getPinLng() { return pinLng; }
+	public void setPin(double[] pin) {
+		this.pinLat = pin == null ? null : pin[0];
+		this.pinLng = pin == null ? null : pin[1];
+	}
 	public String getBuilding() { return building; }
 	public void setBuilding(String v) { this.building = v == null ? "" : v; }
 	public String getAddressNotes() { return addressNotes; }

@@ -88,6 +88,19 @@ The store can message customers on WhatsApp when their order is received, confir
 
 Customers are only messaged if they tick *Send me order updates on WhatsApp* at checkout (unticked by default; WhatsApp requires an explicit opt-in). The message goes to the mobile number on the order. Failures are only logged (`WhatsApp … failed`), never shown to the shopper. Mention WhatsApp messages in the privacy policy (Admin → Content) before switching this on.
 
+## "Use my location" at checkout (on by default)
+
+The button on the checkout page reads the shopper's position (only when they tap it) and the API turns it into an address through OpenStreetMap Nominatim (`GET /api/v1/geocode/reverse`). Nothing is stored or logged, results are cached for an hour, and each visitor is rate-limited.
+
+| Variable | Value |
+|---|---|
+| `GEOCODING_ENABLED` | `true` (default). `false` turns the lookup off: the button then tells the shopper to enter the address themselves |
+| `GEOCODING_URL` | default `https://nominatim.openstreetmap.org`; point it at your own Nominatim (or a Nominatim-compatible service) if traffic grows |
+
+- The public Nominatim server is free but best-effort (about one request per second, occasional slow answers). The API retries once and the shopper can always type the address, but for busy drops use your own instance or a paid Nominatim-compatible provider.
+- The browser only allows location on **https**. Behind Caddy the `Permissions-Policy` header must contain `geolocation=(self)` (it does in `deploy/Caddyfile`); with `geolocation=()` the button always says location is blocked. If another proxy (Railway, Cloudflare) adds its own `Permissions-Policy`, make sure it allows geolocation for the site itself.
+- Mention it in the privacy policy (Admin → Content): the shopper's position is sent to OpenStreetMap to look up the address, and the exact spot is saved with the order so the courier can find it (staff only; order view → *Open in Maps*).
+
 ## Railway
 
 The live store (voideg.app) is the `Dockerfile` deployed by Railway from `main`, with Railway's MySQL (the `MYSQL*` variables are picked up automatically). Pushing to `main` redeploys it.

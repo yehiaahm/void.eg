@@ -1,6 +1,7 @@
 package com.voidstore.api;
 
 import com.voidstore.api.config.AppProperties;
+import com.voidstore.api.config.GeocodingProperties;
 import com.voidstore.api.config.WhatsAppProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableAsync
 @EnableScheduling
-@EnableConfigurationProperties({AppProperties.class, WhatsAppProperties.class})
+@EnableConfigurationProperties({AppProperties.class, WhatsAppProperties.class, GeocodingProperties.class})
 public class VoidApiApplication {
 
 	public static void main(String[] args) {

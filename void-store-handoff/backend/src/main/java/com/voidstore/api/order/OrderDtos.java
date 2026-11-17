@@ -32,7 +32,21 @@ public final class OrderDtos {
 			@NotBlank @Size(max = 120) String city,
 			@NotBlank @Size(max = 255) String street,
 			@Size(max = 120) String building,
-			@Size(max = 500) String notes) {}
+			@Size(max = 500) String notes,
+			/** Optional map pin from "Use my location" (both or neither); anything unusable is ignored, never an error. */
+			Double lat,
+			Double lng) {
+
+		public AddressReq(String governorate, String city, String street, String building, String notes) {
+			this(governorate, city, street, building, notes, null, null);
+		}
+
+		/** {lat, lng} rounded to ~10 cm when both are present, finite and inside Egypt; otherwise null. */
+		public double[] pin() {
+			if (lat == null || lng == null || !com.voidstore.api.shipping.ReverseGeocoder.inEgypt(lat, lng)) return null;
+			return new double[] {Math.round(lat * 1e6) / 1e6, Math.round(lng * 1e6) / 1e6};
+		}
+	}
 
 	public record PlaceReq(
 			@NotEmpty @Size(max = 30) List<@Valid LineReq> items,

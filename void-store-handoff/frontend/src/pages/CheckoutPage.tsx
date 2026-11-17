@@ -2,8 +2,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError, api, useSettings, useZones, type Address, type StoreSettings } from '../api'
-import { Field, Select, TextArea } from '../components/Field'
+import { Field, TextArea } from '../components/Field'
+import { GovernorateField } from '../components/GovernorateField'
 import { LineItem } from '../components/LineItem'
+import { LocateButton, type LocatedAddress } from '../components/LocateButton'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useQuote } from '../hooks/useQuote'
 import { useI18n } from '../i18n'
@@ -29,7 +31,7 @@ interface Form {
 const EMPTY: Form = { email: '', name: '', phone: '', governorate: '', city: '', street: '', building: '', notes: '', note: '' }
 
 export function CheckoutPage() {
-  const { lang, t, l } = useI18n()
+  const { lang, t } = useI18n()
   useDocumentTitle(`${t.checkout} — VOID`)
   const bag = useBag()
   const { user } = useAuth()
@@ -42,6 +44,10 @@ export function CheckoutPage() {
 
   const [f, setF] = useState<Form>(EMPTY)
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({})
+  // what is typed in the governorate field; null = show the selected zone's own name
+  const [govText, setGovText] = useState<string | null>(null)
+  // exact spot from "Use my location"; `code` is the zone it matched, so a different governorate chosen later drops it
+  const [pin, setPin] = useState<{ lat: number; lng: number; code: string } | null>(null)
   const [couponInput, setCouponInput] = useState('')
   const [coupon, setCoupon] = useState('')
   const [addressId, setAddressId] = useState<number | 'new'>('new')
@@ -59,8 +65,20 @@ export function CheckoutPage() {
     setF((x) => ({ ...x, email: x.email || user.email, name: x.name || user.name, phone: x.phone || user.phone || '' }))
   }, [user])
 
-  const applyAddress = (a: Address) =>
+  const applyAddress = (a: Address) => {
+    setGovText(null)
+    setPin(null)
     setF((x) => ({ ...x, name: a.name, phone: a.phone, governorate: a.governorate, city: a.city, street: a.street, building: a.building, notes: a.notes }))
+  }
+
+  // "Use my current location": the located address replaces the address fields (name, phone and notes stay).
+  const applyLocation = (a: LocatedAddress) => {
+    setAddressId('new')
+    setGovText(a.text)
+    setPin({ lat: a.lat, lng: a.lng, code: a.code })
+    setF((x) => ({ ...x, governorate: a.code, city: a.city, street: a.street, building: a.building }))
+    setErrors((x) => ({ ...x, governorate: undefined, city: undefined, street: undefined }))
+  }
 
   useEffect(() => {
     const def = saved.find((a) => a.isDefault) ?? saved[0]
@@ -102,11 +120,12 @@ export function CheckoutPage() {
     setFormError(null)
     if (!validate() || blocked || submitting) return
     setSubmitting(true)
+    const sharedPin = pin && (!pin.code || pin.code === f.governorate) ? { lat: pin.lat, lng: pin.lng } : {}
     try {
       const res = await api.placeOrder({
         items: bag.lines.map((x) => ({ slug: x.slug, size: x.size, qty: x.qty })),
         contact: { email: f.email.trim(), name: f.name.trim(), phone: f.phone },
-        address: { governorate: f.governorate, city: f.city.trim(), street: f.street.trim(), building: f.building.trim(), notes: f.notes.trim() },
+        address: { governorate: f.governorate, city: f.city.trim(), street: f.street.trim(), building: f.building.trim(), notes: f.notes.trim(), ...sharedPin },
         note: f.note.trim(),
         couponCode: coupon || undefined,
         paymentMethod: 'COD',
@@ -189,14 +208,19 @@ export function CheckoutPage() {
                   </label>
                 </div>
               )}
-              <Select label={t.governorate} name="governorate" value={zoneKnown ? f.governorate : ''} onChange={set('governorate')} error={errors.governorate} disabled={noZones}>
-                <option value="">{t.chooseGovernorate}</option>
-                {zones.map((z) => (
-                  <option key={z.code} value={z.code}>
-                    {l(z.name)} — {formatPrice(z.fee, lang)}
-                  </option>
-                ))}
-              </Select>
+              <LocateButton zones={zones} onFill={applyLocation} disabled={noZones} />
+              <GovernorateField
+                zones={zones}
+                code={f.governorate}
+                text={govText}
+                onChange={({ code, text }) => {
+                  setGovText(text)
+                  setF((x) => ({ ...x, governorate: code }))
+                  if (errors.governorate) setErrors((x) => ({ ...x, governorate: undefined }))
+                }}
+                error={errors.governorate}
+                disabled={noZones}
+              />
               <div className="s-grid2">
                 <Field label={t.city} name="city" autoComplete="address-level2" value={f.city} onChange={set('city')} error={errors.city} />
                 <Field label={t.building} name="building" value={f.building} onChange={set('building')} aside={<span className="s-fhint">{t.optional}</span>} />

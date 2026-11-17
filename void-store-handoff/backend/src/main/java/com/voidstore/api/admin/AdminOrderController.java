@@ -55,7 +55,7 @@ public class AdminOrderController {
 			String paymentStatus, String paymentRef, Instant createdAt, Instant updatedAt, String lang, Long customerId,
 			String email, String name, String phone, String governorate, String city, String street, String building,
 			String addressNotes, String customerNote, List<ItemDto> items, int subtotal, int discount, int shipping,
-			int total, String couponCode, List<EventDto> events) {}
+			int total, String couponCode, List<EventDto> events, Double pinLat, Double pinLng) {}
 
 	public record StatusReq(@NotBlank String status, @Size(max = 1000) String note) {}
 
@@ -93,7 +93,8 @@ public class AdminOrderController {
 				o.getEvents().stream().map(e -> new EventDto(e.getType().name(),
 						e.getFromStatus() == null ? null : e.getFromStatus().name(),
 						e.getToStatus() == null ? null : e.getToStatus().name(), e.getNote(), e.getActorName(), e.getCreatedAt()))
-						.toList());
+						.toList(),
+				o.getPinLat(), o.getPinLng());
 	}
 
 	private static Order.Status parseStatus(String s) {

@@ -73,6 +73,11 @@ void:
     phone-number-id: ${WHATSAPP_PHONE_NUMBER_ID:}
     api-version: ${WHATSAPP_API_VERSION:v21.0}
     template-prefix: ${WHATSAPP_TEMPLATE_PREFIX:void_order_}
+  geocoding:
+    # "Use my location" at checkout: coordinates -> address through OpenStreetMap Nominatim (no key needed).
+    # The public server allows ~1 request/second; use your own instance (GEOCODING_URL) if traffic grows.
+    enabled: ${GEOCODING_ENABLED:true}
+    url: ${GEOCODING_URL:https://nominatim.openstreetmap.org}
   bootstrap:
     # ADMIN_USERNAME / ADMIN_PASSWORD are accepted as aliases (the username must be an email).
     owner-email: ${OWNER_EMAIL:${ADMIN_USERNAME:}}

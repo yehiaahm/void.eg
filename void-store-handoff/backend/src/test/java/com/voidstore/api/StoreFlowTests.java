@@ -214,6 +214,32 @@ class StoreFlowTests {
 	}
 
 	@Test
+	void theMapPinReachesStaffOnlyAndUnusablePinsAreIgnored() throws Exception {
+		String owner = login("owner@test.local", "owner-test-password");
+		String[] numbers = new String[3];
+		String[] pins = {"\"lat\":30.04441234,\"lng\":31.2357", "\"lat\":48.85,\"lng\":2.35", "\"lat\":30.04"}; // Cairo, Paris, half a pin
+		String[] phones = {"01012345671", "01012345672", "01012345673"};
+		for (int i = 0; i < 3; i++) {
+			String body = order("singularity-tee", "M", 1, phones[i], null).replace("buyer@example.com", "pin" + i + "@example.com")
+					.replace("\"street\":\"1 Test St\"", "\"street\":\"1 Test St\"," + pins[i]);
+			var placed = post("/orders", body);
+			assertThat(placed.status()).isEqualTo(200); // a bad pin never blocks an order
+			numbers[i] = placed.body().get("number").asText();
+		}
+		var good = call("GET", "/admin/orders/" + numbers[0], null, owner, null).body();
+		assertThat(good.get("pinLat").asDouble()).isEqualTo(30.044412);
+		assertThat(good.get("pinLng").asDouble()).isEqualTo(31.2357);
+		assertThat(call("GET", "/admin/orders/" + numbers[1], null, owner, null).body().get("pinLat").isNull()).isTrue(); // outside Egypt
+		assertThat(call("GET", "/admin/orders/" + numbers[2], null, owner, null).body().get("pinLat").isNull()).isTrue(); // lat without lng
+
+		// customers never get the coordinates back
+		var tracked = post("/orders/track", "{\"number\":\"" + numbers[0] + "\",\"phone\":\"" + phones[0] + "\"}");
+		assertThat(tracked.body().toString()).doesNotContain("pinLat").doesNotContain("pinLng").doesNotContain("30.04");
+
+		for (String n : numbers) call("POST", "/admin/orders/" + n + "/status", "{\"status\":\"CANCELLED\",\"note\":\"test\"}", owner, null);
+	}
+
+	@Test
 	void adminNeedsAStaffRole() throws Exception {
 		assertThat(call("GET", "/admin/orders", null, null, null).status()).isEqualTo(401);
 		var reg = post("/auth/register", "{\"name\":\"Cust\",\"email\":\"cust-" + System.nanoTime() + "@example.com\",\"password\":\"cust-password\"}");

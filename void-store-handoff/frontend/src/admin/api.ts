@@ -60,6 +60,9 @@ export interface AdminOrder {
   street: string
   building: string
   addressNotes: string
+  /** exact spot the customer shared with "Use my location"; null when they typed the address */
+  pinLat: number | null
+  pinLng: number | null
   customerNote: string
   items: { slug: string; name: string; size: string; sku: string | null; image: string | null; unitPrice: number; qty: number; lineTotal: number }[]
   subtotal: number

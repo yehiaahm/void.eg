@@ -285,6 +285,19 @@ export default function OrderDetail() {
               {o.city}, <span className="a-mono">{o.governorate}</span>
             </p>
             {o.addressNotes && <p className="a-muted" style={{ margin: '8px 0 0' }}>{o.addressNotes}</p>}
+            {o.pinLat != null && o.pinLng != null && (
+              <p style={{ margin: '12px 0 0' }}>
+                <a
+                  className="a-btn a-btn-sm"
+                  href={`https://www.google.com/maps?q=${o.pinLat},${o.pinLng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={t.sharedLocation}
+                >
+                  {t.openInMaps}
+                </a>
+              </p>
+            )}
           </div>
           {linkedReturns.length > 0 && (
             <div className="a-card">
